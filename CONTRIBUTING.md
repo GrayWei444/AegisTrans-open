@@ -27,7 +27,7 @@ Run before opening a pull request:
 ```bash
 for f in scripts/check-*.mjs; do node "$f" || exit 1; done
 for f in scripts/check-*.py; do uv run --no-project --python 3.12 --with fastapi --with httpx --with pydantic python "$f" || exit 1; done
-(cd api && python -m unittest test_schema_b test_google_iap test_iap_sandbox_allowlist)
+(cd api && python -m unittest test_schema_b test_google_iap test_iap_sandbox_allowlist)   # needs: pip install -r api/requirements.txt httpx
 ```
 
 The `.mjs` checks need `esbuild`, `mqtt`, `idb`, `hash-wasm` and `sql.js`

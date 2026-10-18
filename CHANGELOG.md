@@ -11,3 +11,4 @@ First public source release.
 - Fixed: tapping a received photo opens it full screen again.
 - The sign-in confirmation page, file buttons and image viewer follow the app language; the sign-in email is in Chinese and English.
 - Self-hosted builds no longer label their own server "Official server".
+- On first launch the app follows the browser or system language (English when it is not one of the five supported languages).

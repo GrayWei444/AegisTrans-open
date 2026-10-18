@@ -19,6 +19,24 @@ interface LanguageState {
   loadFromStorage: () => Promise<void>;
 }
 
+/** 第一次開啟（還沒存過語言）時跟隨瀏覽器／系統語言；都不支援時用英文，讀不到語言設定才用 zh-TW */
+function detectBrowserLanguage(): Language {
+  try {
+    if (typeof navigator === 'undefined') return 'zh-TW';
+    const prefs = navigator.languages?.length ? navigator.languages : [navigator.language];
+    for (const raw of prefs) {
+      const tag = (raw || '').toLowerCase();
+      if (tag.startsWith('zh')) return /^zh-(cn|sg|hans)/.test(tag) ? 'zh-CN' : 'zh-TW';
+      if (tag.startsWith('en')) return 'en';
+      if (tag.startsWith('ja')) return 'ja';
+      if (tag.startsWith('ko')) return 'ko';
+    }
+    return prefs.some(Boolean) ? 'en' : 'zh-TW';
+  } catch {
+    return 'zh-TW';
+  }
+}
+
 function loadLanguage(): Language {
   try {
     const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -28,7 +46,7 @@ function loadLanguage(): Language {
   } catch (e) {
     console.error('[languageStore] Failed to load language:', e);
   }
-  return 'zh-TW';
+  return detectBrowserLanguage();
 }
 
 function saveLanguage(lang: Language): void {
