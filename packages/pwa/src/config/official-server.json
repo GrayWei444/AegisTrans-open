@@ -1,0 +1,17 @@
+{
+  "_comment": "Public endpoints of the official AegisTrans service. The app connects here unless the user picks another server in Settings, or a self-hosted build sets VITE_DEFAULT_API_URL (see packages/pwa/.env.example). No secrets belong in this file.",
+  "name": "AegisTrans",
+  "apiUrl": "https://api.aegisrd.com",
+  "webApiPath": "/api",
+  "webUrl": "https://trans.aegisrd.com",
+  "mqttUrl": "wss://mqtt.aegisrd.com/trans-mqtt",
+  "turnUrl": "turn:31.97.71.140:3478",
+  "links": {
+    "privacy": "https://trans.aegisrd.com/privacy.html",
+    "terms": "https://aegisrd.com/aegistrans/terms",
+    "support": "https://aegisrd.com/aegistrans/support",
+    "deleteAccount": "https://aegisrd.com/aegistrans/delete-account",
+    "supportEmail": "support@aegisrd.com",
+    "companyTerms": "https://aegisrd.com/terms"
+  }
+}

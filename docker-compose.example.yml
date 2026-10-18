@@ -1,0 +1,64 @@
+# Example self-hosting stack for AegisTrans: API + EMQX broker (+ Mailpit to catch
+# verification e-mails while testing). See docs/SELF_HOSTING.md.
+#
+#   cp api/.env.example api/.env          # fill in; leave AEGIS_MQTT_JWT_SECRET empty there
+#   echo "AEGIS_MQTT_JWT_SECRET=$(openssl rand -hex 32)" > .env   # shared by API and broker
+#   docker compose -f docker-compose.example.yml up -d
+#
+# Ports are bound to 127.0.0.1 only. Put a TLS reverse proxy in front, e.g.
+#   https://api.example.com        -> 127.0.0.1:8000
+#   wss://mqtt.example.com/mqtt    -> 127.0.0.1:8083 (path /mqtt)
+# and serve the built PWA (packages/pwa/dist) at AEGISTRANS_APP_URL.
+#
+# Not verified in the AegisTrans CI; treat it as a starting point.
+
+services:
+  api:
+    image: python:3.12-slim
+    working_dir: /app
+    command: >-
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             exec uvicorn app:create_app --factory --host 0.0.0.0 --port 8000 --proxy-headers"
+    env_file: [api/.env]
+    environment:
+      AEGIS_MQTT_JWT_SECRET: ${AEGIS_MQTT_JWT_SECRET:?put AEGIS_MQTT_JWT_SECRET in .env next to this file}
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - ./api:/app:ro
+      - aegistrans-data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+
+  emqx:
+    image: emqx/emqx:5.8.6
+    environment:
+      # Authentication: the MQTT password is a JWT signed by the API (HS256, same secret).
+      # The token's "acl" claim carries the client's topic permissions.
+      EMQX_AUTHENTICATION: >-
+        [{mechanism = jwt, from = password, use_jwks = false, algorithm = "hmac-based",
+          secret = "${AEGIS_MQTT_JWT_SECRET}", secret_base64_encoded = false,
+          acl_claim_name = acl, verify_claims = {}}]
+      # Authorization: only what the token's acl claim allows; everything else is denied.
+      EMQX_AUTHORIZATION__SOURCES: "[]"
+      EMQX_AUTHORIZATION__NO_MATCH: deny
+      EMQX_AUTHORIZATION__DENY_ACTION: ignore
+      EMQX_AUTHORIZATION__CACHE__ENABLE: "false"
+      # Dashboard only on localhost (change the default admin password on first login).
+      EMQX_DASHBOARD__LISTENERS__HTTP__BIND: "0.0.0.0:18083"
+    volumes:
+      - emqx-data:/opt/emqx/data
+    ports:
+      - "127.0.0.1:8083:8083"    # MQTT over WebSocket, path /mqtt
+      - "127.0.0.1:18083:18083"  # dashboard
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:8025:8025"    # web UI; set AEGISTRANS_SMTP_HOST=mailpit, AEGISTRANS_SMTP_PORT=1025
+    restart: unless-stopped
+
+volumes:
+  aegistrans-data:
+  emqx-data:

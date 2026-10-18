@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AegisTrans · 裝置指紋診斷</title>
+<style>
+  body { background:#0d1b2a; color:#e0e0e0; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; padding:20px; max-width:900px; margin:0 auto; }
+  h1 { color:#26c6da; font-size:20px; margin-bottom:8px; }
+  h2 { color:#26c6da; font-size:15px; margin-top:24px; padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,.1); }
+  .item { display:flex; padding:6px 0; gap:12px; font-size:13px; border-bottom:1px solid rgba(255,255,255,.05); }
+  .key { color:#888; min-width:200px; }
+  .val { color:#26c6da; flex:1; word-break:break-all; font-family:monospace; }
+  .val.empty { color:#f55; }
+  .val.warn { color:#fa3; }
+  button { background:#26c6da; color:#0d1b2a; border:0; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer; margin-right:8px; margin-bottom:12px; }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  .desc { color:#888; font-size:12px; margin:8px 0 16px; line-height:1.5; }
+  pre { background:rgba(255,255,255,.05); padding:12px; border-radius:6px; overflow-x:auto; font-size:11px; max-height:300px; }
+  .copy { background:#444; color:#ddd; padding:4px 10px; font-size:11px; border-radius:4px; cursor:pointer; }
+</style>
+</head>
+<body>
+<h1>AegisTrans · 裝置指紋診斷</h1>
+<p class="desc">
+  此頁測試瀏覽器實際能讀到什麼。請在兩台電腦各開一次，<br>
+  把「最後的 JSON」整段複製傳回（兩台電腦的結果可比對是否能區分）。<br><br>
+  <strong style="color:#fa3">⚠️ 重要：請先按下面綠色按鈕授權鏡頭+麥克風</strong>，<br>
+  否則無法看到主機板音效晶片名稱、內建鏡頭型號等關鍵指紋特徵。<br>
+  （我們不會錄影/錄音，只讀硬體名稱字串）
+</p>
+
+<button id="btn-perm" style="background:#4ade80; font-size:15px; padding:14px 24px;">
+  📷 點此授權鏡頭+麥克風（解鎖完整指紋）
+</button>
+<button id="btn-copy">📋 複製 JSON</button>
+
+<div id="content"></div>
+<h2>📤 完整 JSON（複製這段給開發者）</h2>
+<pre id="json-out">尚未載入</pre>
+
+<script>
+const result = {};
+
+function setItem(parent, key, val, kls = '') {
+  const div = document.createElement('div');
+  div.className = 'item';
+  const k = document.createElement('div');
+  k.className = 'key';
+  k.textContent = key;
+  const v = document.createElement('div');
+  v.className = 'val ' + kls;
+  v.textContent = val;
+  div.appendChild(k);
+  div.appendChild(v);
+  parent.appendChild(div);
+}
+
+function section(title) {
+  const h = document.createElement('h2');
+  h.textContent = title;
+  document.getElementById('content').appendChild(h);
+  return document.getElementById('content');
+}
+
+function getWebGLInfo() {
+  const out = { vendor: null, renderer: null, vendor_unmasked: null, renderer_unmasked: null, error: null };
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+    if (!gl) { out.error = 'WebGL not supported'; return out; }
+    out.vendor = gl.getParameter(gl.VENDOR);
+    out.renderer = gl.getParameter(gl.RENDERER);
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    if (ext) {
+      out.vendor_unmasked = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+      out.renderer_unmasked = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+    } else {
+      out.error = 'WEBGL_debug_renderer_info not available (privacy mode?)';
+    }
+  } catch (e) {
+    out.error = String(e);
+  }
+  return out;
+}
+
+async function audioFingerprint() {
+  // Simple audio context fingerprint test
+  try {
+    const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 5000, 44100);
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = 1000;
+    const compressor = ctx.createDynamicsCompressor();
+    osc.connect(compressor);
+    compressor.connect(ctx.destination);
+    osc.start(0);
+    const buf = await ctx.startRendering();
+    const samples = buf.getChannelData(0).slice(4500, 5000);
+    let sum = 0;
+    for (let i = 0; i < samples.length; i++) sum += Math.abs(samples[i]);
+    return sum.toString().slice(0, 16);
+  } catch (e) {
+    return 'unavailable: ' + String(e).slice(0, 80);
+  }
+}
+
+async function listDevices() {
+  if (!navigator.mediaDevices?.enumerateDevices) return [];
+  const list = await navigator.mediaDevices.enumerateDevices();
+  return list.map(d => ({
+    kind: d.kind,
+    label: d.label || '(空 — 未授權)',
+    deviceId: (d.deviceId || '').slice(0, 16) + (d.deviceId?.length > 16 ? '...' : ''),
+    groupId: (d.groupId || '').slice(0, 16) + (d.groupId?.length > 16 ? '...' : ''),
+  }));
+}
+
+async function run() {
+  const root = document.getElementById('content');
+  root.innerHTML = '';
+
+  // === 系統 / Navigator ===
+  const sys = section('🖥️ 系統 (navigator)');
+  const navInfo = {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    hardwareConcurrency: navigator.hardwareConcurrency ?? null,
+    deviceMemory: navigator.deviceMemory ?? null,
+    language: navigator.language,
+    languages: (navigator.languages || []).join(','),
+    cookieEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack,
+    maxTouchPoints: navigator.maxTouchPoints,
+    pdfViewerEnabled: navigator.pdfViewerEnabled,
+    onLine: navigator.onLine,
+  };
+  result.navigator = navInfo;
+  for (const [k, v] of Object.entries(navInfo)) {
+    setItem(sys, k, v === null ? '(null — 不支援)' : v, v === null ? 'warn' : '');
+  }
+
+  // === 螢幕 ===
+  const scr = section('🖼️ 螢幕 (screen)');
+  const scrInfo = {
+    width: screen.width,
+    height: screen.height,
+    availWidth: screen.availWidth,
+    availHeight: screen.availHeight,
+    colorDepth: screen.colorDepth,
+    pixelDepth: screen.pixelDepth,
+    devicePixelRatio: window.devicePixelRatio,
+    orientation: screen.orientation?.type ?? null,
+  };
+  result.screen = scrInfo;
+  for (const [k, v] of Object.entries(scrInfo)) {
+    setItem(scr, k, v === null ? '(null)' : v);
+  }
+
+  // === Time / Locale ===
+  const tm = section('🌍 時區 / 語系');
+  const tmInfo = {
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    locale: Intl.DateTimeFormat().resolvedOptions().locale,
+    timezoneOffset: new Date().getTimezoneOffset(),
+  };
+  result.locale = tmInfo;
+  for (const [k, v] of Object.entries(tmInfo)) {
+    setItem(tm, k, v);
+  }
+
+  // === WebGL / GPU ===
+  const gl = section('🎮 GPU / WebGL');
+  const glInfo = getWebGLInfo();
+  result.webgl = glInfo;
+  for (const [k, v] of Object.entries(glInfo)) {
+    setItem(gl, k, v ?? '(null)', v === null ? 'warn' : '');
+  }
+
+  // === Audio fingerprint ===
+  const af = section('🔊 Audio Fingerprint（OfflineAudioContext sum）');
+  const audioFp = await audioFingerprint();
+  result.audio_fingerprint = audioFp;
+  setItem(af, 'fingerprint_sample', audioFp);
+
+  // === Media Devices (no permission) ===
+  const md = section('🎙️ 媒體裝置（未授權前）');
+  const devicesNoPerm = await listDevices();
+  result.devices_no_permission = devicesNoPerm;
+  if (devicesNoPerm.length === 0) {
+    setItem(md, '(無)', 'mediaDevices API 不支援', 'warn');
+  } else {
+    devicesNoPerm.forEach((d, i) => {
+      setItem(md, `[${i}] ${d.kind}`, d.label, d.label.startsWith('(空') ? 'warn' : '');
+    });
+  }
+
+  // === User Agent Client Hints ===
+  const uach = section('🌐 User-Agent Client Hints (現代瀏覽器)');
+  if (navigator.userAgentData) {
+    try {
+      const high = await navigator.userAgentData.getHighEntropyValues([
+        'architecture', 'bitness', 'model', 'platformVersion', 'fullVersionList', 'wow64'
+      ]);
+      result.uaData = high;
+      for (const [k, v] of Object.entries(high)) {
+        setItem(uach, k, JSON.stringify(v));
+      }
+    } catch (e) {
+      setItem(uach, 'error', String(e), 'warn');
+    }
+  } else {
+    setItem(uach, 'navigator.userAgentData', '(不支援，可能是 Safari/Firefox)', 'warn');
+  }
+
+  updateJson();
+}
+
+async function requestPermissionAndRescan() {
+  const root = document.getElementById('content');
+  try {
+    setItem(section('⏳ 等待權限'), 'status', '請允許鏡頭+麥克風...');
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    // 立刻關掉串流（我們只要 label）
+    stream.getTracks().forEach(t => t.stop());
+
+    const md2 = section('✅ 媒體裝置（授權後 — 真實 label）');
+    const devicesWithPerm = await listDevices();
+    result.devices_with_permission = devicesWithPerm;
+    devicesWithPerm.forEach((d, i) => {
+      setItem(md2, `[${i}] ${d.kind}`, d.label);
+    });
+    updateJson();
+  } catch (e) {
+    setItem(section('❌ 權限拒絕'), 'error', String(e), 'warn');
+    updateJson();
+  }
+}
+
+function updateJson() {
+  document.getElementById('json-out').textContent = JSON.stringify(result, null, 2);
+}
+
+document.getElementById('btn-perm').addEventListener('click', requestPermissionAndRescan);
+document.getElementById('btn-copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+    alert('JSON 已複製到剪貼簿');
+  } catch (e) {
+    alert('複製失敗：' + e);
+  }
+});
+
+run();
+</script>
+</body>
+</html>

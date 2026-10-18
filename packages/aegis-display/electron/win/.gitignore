@@ -1,0 +1,14 @@
+# Build output / staging — produced by build.ps1, never committed.
+dist/
+
+# Driver fork: upstream clone scratch + MSBuild output.
+AegisDisplayDriver/_upstream/
+AegisDisplayDriver/**/x64/
+AegisDisplayDriver/**/Debug/
+AegisDisplayDriver/**/Release/
+AegisDisplayDriver/**/.vs/
+*.cat
+*.cer
+
+# Control CLI: cmake build tree.
+AegisDisplayControl/build/

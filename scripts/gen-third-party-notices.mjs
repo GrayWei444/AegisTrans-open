@@ -1,0 +1,162 @@
+/**
+ * 重新產生 THIRD_PARTY_NOTICES.md 裡「自動產生」那一段：App 會帶給使用者的第三方套件與授權。
+ *
+ *   - packages/pwa 與 packages/pwa/electron 的 production dependencies（含間接依賴；需要先 npm ci）
+ *   - packages/crypto-core 編進 WASM 的 Rust crates（cargo metadata，wasm32 平台的一般依賴）
+ *
+ * 只改 <!-- BEGIN GENERATED --> 與 <!-- END GENERATED --> 之間；其餘手寫內容不動。
+ * Run: node scripts/gen-third-party-notices.mjs [--check]   （--check：內容過期就失敗，不寫檔）
+ */
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const NOTICES = join(root, 'THIRD_PARTY_NOTICES.md');
+const BEGIN = '<!-- BEGIN GENERATED -->';
+const END = '<!-- END GENERATED -->';
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+function licenseOf(pkg) {
+  if (typeof pkg.license === 'string') return pkg.license;
+  if (pkg.license && typeof pkg.license === 'object') return pkg.license.type ?? 'UNKNOWN';
+  if (Array.isArray(pkg.licenses)) return pkg.licenses.map((l) => l.type ?? l).join(' OR ');
+  return 'UNKNOWN';
+}
+
+function repoOf(pkg) {
+  const r = typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url;
+  return (r ?? pkg.homepage ?? '').replace(/^git\+/, '').replace(/\.git$/, '');
+}
+
+/** 從 fromDir 往上找 node_modules/<name>（Node 的解析規則） */
+function findPackageDir(name, fromDir, stopAt) {
+  let dir = fromDir;
+  for (;;) {
+    const candidate = join(dir, 'node_modules', name);
+    if (existsSync(join(candidate, 'package.json'))) return candidate;
+    if (dir === stopAt) return null;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+/** production 依賴閉包（含 optional；不含 dev、不含 file: 本地套件） */
+function npmProduction(appDir) {
+  const top = readJson(join(appDir, 'package.json'));
+  if (!existsSync(join(appDir, 'node_modules'))) {
+    throw new Error(`${appDir}/node_modules missing — run npm ci there first`);
+  }
+  const seen = new Map();
+  const queue = Object.entries({ ...top.dependencies, ...top.optionalDependencies })
+    .filter(([, spec]) => !String(spec).startsWith('file:'))
+    .map(([name]) => [name, appDir]);
+  while (queue.length) {
+    const [name, from] = queue.shift();
+    const dir = findPackageDir(name, from, appDir);
+    if (!dir) continue; // optional dependency not installed on this platform
+    const pkg = readJson(join(dir, 'package.json'));
+    const key = `${pkg.name}@${pkg.version}`;
+    if (seen.has(key)) continue;
+    seen.set(key, { name: pkg.name, version: pkg.version, license: licenseOf(pkg), repo: repoOf(pkg) });
+    for (const dep of Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies })) queue.push([dep, dir]);
+  }
+  return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
+}
+
+function cargoCrates(crateDir) {
+  const out = execFileSync('cargo', ['metadata', '--format-version', '1', '--locked',
+    '--filter-platform', 'wasm32-unknown-unknown'], { cwd: crateDir, maxBuffer: 64 * 1024 * 1024 });
+  const meta = JSON.parse(out.toString('utf8'));
+  const byId = new Map(meta.packages.map((p) => [p.id, p]));
+  const nodes = new Map(meta.resolve.nodes.map((n) => [n.id, n]));
+  const rootId = meta.resolve.root;
+  const seen = new Set();
+  const queue = [rootId];
+  while (queue.length) {
+    const id = queue.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    for (const dep of nodes.get(id)?.deps ?? []) {
+      if (dep.dep_kinds.some((k) => k.kind === null)) queue.push(dep.pkg); // normal deps only
+    }
+  }
+  seen.delete(rootId);
+  return [...seen].map((id) => byId.get(id))
+    .map((p) => ({ name: p.name, version: p.version, license: p.license ?? (p.license_file ? `see ${p.license_file}` : 'UNKNOWN'),
+      repo: p.repository ?? p.homepage ?? '', procMacro: p.targets.some((t) => t.kind.includes('proc-macro')) }))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
+}
+
+function table(rows, extra) {
+  const lines = ['| Package | Version | License | Source |', '|---|---|---|---|'];
+  for (const r of rows) {
+    lines.push(`| \`${r.name}\`${extra?.(r) ?? ''} | ${r.version} | ${r.license} | ${r.repo || '—'} |`);
+  }
+  return lines.join('\n');
+}
+
+function summary(rows) {
+  const counts = new Map();
+  for (const r of rows) counts.set(r.license, (counts.get(r.license) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([l, n]) => `${l} (${n})`).join(', ');
+}
+
+const pwa = npmProduction(join(root, 'packages/pwa'));
+const desktopDir = join(root, 'packages/pwa/electron');
+const desktop = existsSync(join(desktopDir, 'node_modules')) ? npmProduction(desktopDir) : null;
+const crates = cargoCrates(join(root, 'packages/crypto-core'));
+
+const generated = [
+  BEGIN,
+  '',
+  '## Bundled packages (generated by `node scripts/gen-third-party-notices.mjs`)',
+  '',
+  'Each package keeps its own license; the full license texts ship inside each package',
+  '(`node_modules/<name>/LICENSE*`, or the crate source on crates.io).',
+  '',
+  `### Web / mobile app (\`packages/pwa\`, production dependencies) — ${pwa.length} packages`,
+  '',
+  `Licenses: ${summary(pwa)}`,
+  '',
+  table(pwa),
+  '',
+  ...(desktop ? [
+    `### Desktop shell (\`packages/pwa/electron\`, production dependencies) — ${desktop.length} packages`,
+    '',
+    `Licenses: ${summary(desktop)}`,
+    '',
+    table(desktop),
+    '',
+  ] : ['### Desktop shell', '', '_Not generated: run `npm ci` in `packages/pwa/electron` first._', '']),
+  `### Encryption core (\`packages/crypto-core\`, Rust crates compiled into the WASM) — ${crates.length} crates`,
+  '',
+  `Licenses: ${summary(crates)}`,
+  '',
+  table(crates, (r) => (r.procMacro ? ' (build-time macro)' : '')),
+  '',
+  END,
+].join('\n');
+
+const current = readFileSync(NOTICES, 'utf8');
+const start = current.indexOf(BEGIN);
+const end = current.indexOf(END);
+const next = start >= 0 && end > start
+  ? current.slice(0, start) + generated + current.slice(end + END.length)
+  : `${current.trimEnd()}\n\n${generated}\n`;
+
+if (process.argv.includes('--check')) {
+  if (next !== current) {
+    console.error('THIRD_PARTY_NOTICES.md is out of date — run node scripts/gen-third-party-notices.mjs');
+    process.exit(1);
+  }
+  console.log('THIRD_PARTY_NOTICES.md is up to date');
+} else {
+  writeFileSync(NOTICES, next);
+  console.log(`THIRD_PARTY_NOTICES.md: ${pwa.length} app packages, ${desktop?.length ?? 0} desktop packages, ${crates.length} crates`);
+}

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash 全螢幕底色 — app 暗色主題色（亮模式系統會用 windowBackground） -->
+    <color name="splash_background">#0d1b2a</color>
+</resources>

@@ -1,0 +1,97 @@
+name: CI (release gate)
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/pwa/package-lock.json
+
+      - name: Install pwa deps
+        working-directory: packages/pwa
+        run: npm ci
+
+      - name: Install aegis-display plugin deps (sibling package, not hoisted)
+        working-directory: packages/aegis-display
+        run: npm install --no-audit --no-fund
+
+      # Checkouts without the prebuilt crypto core (e.g. the public repository) build it from
+      # source and verify the result against packages/crypto-core/REPRODUCIBLE.sha256.
+      - name: Install wasm-pack 0.13.1
+        if: hashFiles('packages/pwa/src/wasm/pkg/safetalk_core.js') == ''
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz \
+            | tar -xz --strip-components=1 -C "$HOME/.local/bin" wasm-pack-v0.13.1-x86_64-unknown-linux-musl/wasm-pack
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build and verify crypto core (reproducible)
+        if: hashFiles('packages/pwa/src/wasm/pkg/safetalk_core.js') == ''
+        run: packages/crypto-core/build.sh --verify --install
+
+      # --- Gate steps: each fails the build. Ordered cheap → expensive. ---
+
+      - name: Type-check
+        working-directory: packages/pwa
+        run: npm run type-check
+
+      - name: Lint (errors block; warnings allowed)
+        working-directory: packages/pwa
+        run: npm run lint
+
+      - name: Communication invariants
+        run: node scripts/check-session-reset-invariants.mjs
+
+      - name: Dependency audit (shipped deps only, high+)
+        working-directory: packages/pwa
+        # Only production deps ship to users; dev tooling advisories don't. Fail on high/critical
+        # in anything that reaches a user's device.
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build
+        working-directory: packages/pwa
+        run: npm run build
+
+  electron-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/pwa/electron/package-lock.json
+
+      - name: Install desktop dependencies
+        working-directory: packages/pwa/electron
+        run: npm ci
+
+      - name: Audit shipped desktop dependencies
+        working-directory: packages/pwa/electron
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Compile Electron and native Node modules
+        working-directory: packages/pwa/electron
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Deferred gates (need infra/decisions, not run here yet):
+  #   - Android build/lint: needs setup-java + Android SDK + gradle cache (slow; add when
+  #     native regressions justify the ~10min). Locally: npm run android:build.
+  #   - iOS archive: needs a macOS runner (billed minutes) + distribution signing secrets.
+  #   - E2E (incl. zombie-datachannel + account-isolation): live in a separate test
+  #     repository and need a live deployment as target; not wired into this workflow.
+  # ---------------------------------------------------------------------------

@@ -1,0 +1,15 @@
+# AegisTrans API runtime dependencies (aegistrans_routes.py).
+# Pinned to the versions running in production (VPS /usr/bin/python3) as of 2026-07-16.
+# Everything else the router uses is Python stdlib (sqlite3, hashlib/scrypt, hmac,
+# smtplib, secrets, base64, json, email, contextlib) — no extra packages needed.
+# JWTs are hand-signed with hmac/hashlib (no pyjwt); passwords use hashlib.scrypt.
+#
+# New-machine deploy:  python3 -m pip install -r api/requirements.txt
+# Without app-store-server-library the /verify and /apple-notifications IAP
+# endpoints raise 503 (import is lazy, inside the handlers).
+
+fastapi==0.128.0
+pydantic==2.12.5
+uvicorn[standard]==0.40.0
+app-store-server-library==3.1.2
+google-auth==2.40.3

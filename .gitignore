@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Build output
+dist/
+build/
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Capacitor
+ios/App/Pods/
+ios/App/build/
+ios/.bundle/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Capacitor Electron 殼 build artifacts(Phase 2 §6.3)
+packages/pwa/electron/app/
+packages/pwa/electron/build/
+packages/pwa/electron/release/
+
+# Test
+coverage/
+test-results/
+playwright-report/
+
+# Deprecated (kept for reference, not pushed)
+_deprecated/
+
+# Secrets
+*.pem
+*.key
+firebase-service-account.json
+GoogleService-Info.plist
+
+# Logs
+logs/
+*.log
+
+# Temp
+.tmp/
+.cache/
+
+# Snapshot backups（自動化 MD 編輯產生的 root-owner 時序快照；別追也別 push）
+*.bak
+*.bak2
+*.bak3
+
+# TypeScript build cache (auto-generated)
+*.tsbuildinfo
+packages/pwa/vite.config.d.ts
+
+# Python bytecode
+__pycache__/

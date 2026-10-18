@@ -1,0 +1,108 @@
+{
+  "appId": "com.aegisrd.aegistrans",
+  "productName": "AegisTrans",
+  "copyright": "Copyright © 2026 AegisRD",
+  "directories": {
+    "buildResources": "resources",
+    "output": "release"
+  },
+  "files": [
+    "assets/**/*",
+    "build/**/*",
+    "capacitor.config.*",
+    "app/**/*",
+    "!**/node_modules/**/.build/**",
+    "!**/node_modules/**/*.dSYM/**",
+    "!**/.build/**",
+    "!**/*.dSYM/**"
+  ],
+  "mac": {
+    "category": "public.app-category.productivity",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": [
+          "arm64",
+          "x64"
+        ]
+      },
+      {
+        "target": "zip",
+        "arch": [
+          "arm64",
+          "x64"
+        ]
+      }
+    ],
+    "icon": "assets/appIcon.png",
+    "darkModeSupport": true,
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "resources/entitlements.mac.plist",
+    "entitlementsInherit": "resources/entitlements.mac.plist",
+    "extraResources": [
+      {
+        "from": "../../aegis-display/electron/mac/dist/AegisDisplayHelper",
+        "to": "AegisDisplayHelper"
+      }
+    ],
+    "files": [
+      "!**/node_modules/@aegisrd/capacitor-aegisdisplay-electron/win/**",
+      "!**/node_modules/@aegisrd/capacitor-aegisdisplay-electron/android/**",
+      "!**/node_modules/@aegisrd/capacitor-aegisdisplay-electron/ios/**"
+    ]
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "assets/appIcon.ico",
+    "files": [
+      "!**/node_modules/@aegisrd/capacitor-aegisdisplay-electron/mac/**",
+      "!**/node_modules/@aegisrd/capacitor-aegisdisplay-electron/android/**",
+      "!**/node_modules/@aegisrd/capacitor-aegisdisplay-electron/ios/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../../aegis-display/electron/win/dist",
+        "to": "AegisDisplay",
+        "filter": [
+          "AegisDisplayControl.exe",
+          "AegisDisplay.dll",
+          "AegisDisplay.cat",
+          "AegisDisplay.inf",
+          "devcon.exe",
+          "aegis-driver-uninstall.cmd"
+        ]
+      }
+    ]
+  },
+  "nsis": {
+    "allowElevation": true,
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "perMachine": true,
+    "include": "installer.nsh"
+  },
+  "linux": {
+    "syncDesktopName": true,
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "assets/appIcon.png",
+    "category": "Network",
+    "synopsis": "Cross-device E2EE file & screen sharing — to yourself",
+    "description": "AegisTrans 桌面版 — 把手機上的東西放到電腦上,反之亦然。E2EE,純 P2P,不過雲端。"
+  },
+  "appImage": {}
+}

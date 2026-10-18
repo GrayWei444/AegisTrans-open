@@ -1,0 +1,44 @@
+{
+  "name": "@aegisrd/capacitor-aegisdisplay",
+  "version": "0.1.0",
+  "description": "AegisDisplay — Capacitor plugin for cross-platform screen capture & virtual display extension (Mac CGVirtualDisplayCreate / Windows IddCx VDD / iOS ReplayKit / Android MediaProjection / Web getDisplayMedia fallback)",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "ios",
+    "android",
+    "electron"
+  ],
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/core": "^8.0.1",
+    "typescript": "^5.3.0"
+  },
+  "author": "AegisRD",
+  "license": "MIT",
+  "private": true,
+  "_comment_capacitor_android": "Android native impl (MediaProjection 螢幕投放) 進行中 (Phase C) — 在 android/src/main 真有 Kotlin plugin class 前不宣告 capacitor.android，否則 cap sync 的 update android 會 scandir android/src/main → ENOENT 失敗。等原生 plugin 落地再加回 { android: { src: 'android' } }。在那之前 Android captureScreen 走 web fallback (getDisplayMedia)。",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "electron": {
+      "src": "electron"
+    }
+  }
+}

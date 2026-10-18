@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh-TW</string>
+	<key>CFBundleDisplayName</key>
+        <string>AegisTrans</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- ITMS-90683（2026-07-25 被退過一次）：purpose string 是**必填**，即使我們自己的程式碼
+	     沒有呼叫這些 API。真正引用它們的是 WebRTC.framework（螢幕投放用的 libwebrtc）:
+	     strings 實查 AVCaptureDevice x2 / AVCaptureSession x3 / AVAudioSession x8，主 binary 是 0。
+	     缺這兩個 key 的後果：上傳會成功、altool 的 validate-app 也會過（那是上傳前檢查），
+	     但 Apple 的 processing 階段會退掉 → ASC 永遠看不到 build，只收到一封信。
+	     文字也要誠實：iOS 的檔案選擇器確實提供「拍照或錄影」，那條路會用到相機與麥克風。 -->
+	<key>NSCameraUsageDescription</key>
+	<string>當你選擇用「拍照或錄影」來傳送檔案時，AegisTrans 需要使用相機。AegisTrans 不會自行開啟相機，也不會把影像上傳到伺服器。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>當你選擇用「錄影」來傳送檔案時，AegisTrans 需要使用麥克風收音。AegisTrans 不會在背景錄音，也不會把聲音上傳到伺服器。</string>
+	<!-- 出口合規：刻意「不放」ITSAppUsesNonExemptEncryption。
+	     2026-07-25 實測：填 <true/> 但沒有 ITSEncryptionExportComplianceCode（要先在 ASC 上傳
+	     出口合規文件才會拿到）→ altool 直接以 90592 擋下上傳。不放這個 key 時 Apple 會在 ASC
+	     的「出口合規」問卷裡問，答完即可送審 —— 這是標準流程。
+	     填 <false/> 會等於宣告豁免，對自家 Rust/WASM 實作 AES-256-GCM 的 App 不誠實，不要這樣填。 -->
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<!-- iPhone 鎖直向（對齊 Android MainActivity screenOrientation=portrait，CLAUDE §4 外觀統一） -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+
+	<!-- App Transport Security：強制 HTTPS，aegisrd.com 子網域需 forward secrecy -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>aegisrd.com</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

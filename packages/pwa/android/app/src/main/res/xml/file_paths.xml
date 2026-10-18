@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  C-3 (2026-05-07)：縮窄 FileProvider 暴露範圍
+
+  原本 external-path "." + cache-path "." 等於把整個 external storage / cache 都
+  分享出去（即使不是 AegisTrans 寫的也能透過 content URI 被外部 app 讀到）。
+
+  修正：限制在 Capacitor 預設的 app-scoped 目錄。Android 11+ scoped storage 下
+  external-files-path / external-cache-path 是 sandbox 內，不會跨 app 洩漏。
+  另外檔名 path 在寫入前由 services/fileOpener.ts:sanitizeFileName() 防 traversal。
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Capacitor Filesystem.writeFile(directory: Documents)
+         → /storage/emulated/0/Android/data/<pkg>/files/Documents/ -->
+    <external-files-path name="aegistrans_documents" path="Documents/" />
+    <!-- Capacitor Filesystem.writeFile(directory: Cache)
+         → /storage/emulated/0/Android/data/<pkg>/cache/ -->
+    <external-cache-path name="aegistrans_cache" path="." />
+</paths>

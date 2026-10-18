@@ -1,0 +1,34 @@
+# Upstream clone — throwaway, re-clone per README.md
+_upstream/
+
+# msbuild output
+x64/
+Debug/
+Release/
+ARM/
+ARM64/
+*.cat
+*.dll
+*.exe
+*.exp
+*.lib
+*.obj
+*.pdb
+*.idb
+*.iobj
+*.ipdb
+*.suo
+*.user
+*.tlog
+*.log
+*.intermediate.manifest
+
+# VS workspace
+.vs/
+
+# WDK driver staging
+DriverPackage/
+
+# Generated signed artifacts
+*.appx
+*.cer

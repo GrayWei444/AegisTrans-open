@@ -1,0 +1,28 @@
+{
+  "name": "@aegisrd/capacitor-aegisdisplay-electron",
+  "version": "0.1.0",
+  "description": "AegisDisplay Capacitor Electron plugin — bridges renderer to native virtual display helper (macOS CGVirtualDisplayCreate; Windows IddCx VDD in Phase 3).",
+  "type": "commonjs",
+  "main": "dist/plugin.js",
+  "types": "dist/plugin.d.ts",
+  "files": [
+    "dist",
+    "mac",
+    "win"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "electron": ">=26.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.40",
+    "electron": "^26.2.2",
+    "typescript": "^5.9.3"
+  },
+  "author": "AegisRD",
+  "license": "MIT",
+  "private": true
+}
