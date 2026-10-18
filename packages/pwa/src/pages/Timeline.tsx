@@ -669,7 +669,7 @@ function FileBubbleContent({ message, progress, isMine }: { message: Message; pr
           <img
             src={imageUrl}
             alt={name}
-            className="rounded max-w-full max-h-72 cursor-zoom-in hover:opacity-90 transition-opacity"
+            className="clickable rounded max-w-full max-h-72 cursor-zoom-in hover:opacity-90 transition-opacity"
             onClick={() => setLightboxOpen(true)}
           />
           <div className="flex items-center justify-between gap-2 text-[11px] text-on-surface-secondary">
@@ -723,23 +723,23 @@ function FileBubbleContent({ message, progress, isMine }: { message: Message; pr
           <button
             onClick={handleOpen}
             className="px-2.5 py-1 rounded bg-surface-tertiary hover:bg-surface-secondary text-mist-300 text-sm border border-[var(--surface-border)]"
-            title="開啟"
+            title={aegisT(language, 'file.open')}
           >
-            開啟
+            {aegisT(language, 'file.open')}
           </button>
           <button
             onClick={handleSaveLocal}
             className="px-2.5 py-1 rounded bg-mist-500 hover:bg-mist-400 text-navy-900 text-sm font-medium"
-            title="儲存到本機"
+            title={aegisT(language, 'file.saveTitle')}
           >
-            ⬇ 儲存
+            ⬇ {aegisT(language, 'file.save')}
           </button>
           <button
             onClick={handleShare}
             className="px-2.5 py-1 rounded bg-surface-tertiary hover:bg-surface-secondary text-on-surface-primary text-sm border border-[var(--surface-border)]"
-            title="分享到其他 App"
+            title={aegisT(language, 'file.shareTitle')}
           >
-            分享
+            {aegisT(language, 'file.share')}
           </button>
         </div>
       )}

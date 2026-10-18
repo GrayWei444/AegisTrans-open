@@ -117,6 +117,7 @@ legacy topic are not disconnected.
 ## Building apps that default to your server
 
 ```bash
+(cd packages/aegis-display && npm install)   # local plugin the app imports; install it first
 cd packages/pwa
 cp .env.example .env.local     # set VITE_DEFAULT_API_URL, VITE_DEFAULT_MQTT_URL, …
 npm ci && npm run build        # builds the crypto core first if needed (Rust required)

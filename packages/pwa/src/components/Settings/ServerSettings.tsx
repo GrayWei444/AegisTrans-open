@@ -8,6 +8,7 @@ import { useState, type FormEvent } from 'react';
 import { useLanguage } from '../../i18n/context';
 import { aegisT, type AegisStringKey } from '../../i18n/aegistrans-strings';
 import {
+  defaultServerIsOfficial,
   discoverServer,
   getActiveServer,
   webHost,
@@ -35,9 +36,11 @@ export function ServerSettings({ signedIn, compact = false }: ServerSettingsProp
   const [found, setFound] = useState<CustomServer | null>(null);
 
   const t = (key: AegisStringKey) => aegisT(language, key);
-  const activeLabel = active.isDefault
-    ? `${t('server.official')} · ${webHost(active.apiUrl) ?? active.apiUrl}`
-    : `${t('server.custom')} · ${webHost(active.apiUrl) ?? active.apiUrl}`;
+  // 只有官方服務才標「官方伺服器」；自架 build 的預設伺服器與自選伺服器優先顯示伺服器自報的名稱
+  const kindLabel = active.isOfficial
+    ? t('server.official')
+    : active.name || t(active.isDefault ? 'server.default' : 'server.custom');
+  const activeLabel = `${kindLabel} · ${webHost(active.apiUrl) ?? active.apiUrl}`;
 
   const handleCheck = async (e: FormEvent) => {
     e.preventDefault();
@@ -152,7 +155,9 @@ export function ServerSettings({ signedIn, compact = false }: ServerSettingsProp
               disabled={busy !== 'idle'}
               className="w-full py-2 rounded bg-surface-tertiary text-on-surface-secondary disabled:opacity-50"
             >
-              {busy === 'switching' ? t('server.switching') : t('server.useOfficial')}
+              {busy === 'switching'
+                ? t('server.switching')
+                : t(defaultServerIsOfficial() ? 'server.useOfficial' : 'server.useDefault')}
             </button>
           )}
         </div>

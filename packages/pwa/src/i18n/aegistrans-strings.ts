@@ -178,6 +178,11 @@ const STRINGS = {
   'file.open':             { 'zh-TW': '開啟',           'zh-CN': '打开',           en: 'Open',                    ja: '開く',                   ko: '열기' },
   'file.saveAs':           { 'zh-TW': '另存',           'zh-CN': '另存',           en: 'Save as',                 ja: '保存',                   ko: '저장' },
   'file.savedToDownloads': { 'zh-TW': '已儲存',         'zh-CN': '已保存',         en: 'saved',                   ja: '保存しました',           ko: '저장됨' },
+  'file.save':             { 'zh-TW': '儲存',           'zh-CN': '保存',           en: 'Save',                    ja: '保存',                   ko: '저장' },
+  'file.saveTitle':        { 'zh-TW': '儲存到本機',     'zh-CN': '保存到本机',     en: 'Save to this device',     ja: 'この端末に保存',         ko: '이 기기에 저장' },
+  'file.share':            { 'zh-TW': '分享',           'zh-CN': '分享',           en: 'Share',                   ja: '共有',                   ko: '공유' },
+  'file.shareTitle':       { 'zh-TW': '分享到其他 App', 'zh-CN': '分享到其他 App', en: 'Share to another app',    ja: '他のアプリに共有',       ko: '다른 앱으로 공유' },
+  'lightbox.close':        { 'zh-TW': '關閉 (Esc)',     'zh-CN': '关闭 (Esc)',     en: 'Close (Esc)',             ja: '閉じる (Esc)',           ko: '닫기 (Esc)' },
 
   // ===== Phase 1A: Subscription / Paywall / Upgrade =====
   // Paywall modal
@@ -319,6 +324,7 @@ const STRINGS = {
   'server.title':           { 'zh-TW': '伺服器', 'zh-CN': '服务器', en: 'Server', ja: 'サーバー', ko: '서버' },
   'server.official':        { 'zh-TW': '官方伺服器', 'zh-CN': '官方服务器', en: 'Official server', ja: '公式サーバー', ko: '공식 서버' },
   'server.custom':          { 'zh-TW': '自訂伺服器', 'zh-CN': '自定义服务器', en: 'Custom server', ja: 'カスタムサーバー', ko: '사용자 지정 서버' },
+  'server.default':         { 'zh-TW': '預設伺服器', 'zh-CN': '默认服务器', en: 'Default server', ja: 'デフォルトサーバー', ko: '기본 서버' },
   'server.current':         { 'zh-TW': '目前連線', 'zh-CN': '当前连接', en: 'Connected to', ja: '接続先', ko: '연결 대상' },
   'server.change':          { 'zh-TW': '變更', 'zh-CN': '更改', en: 'Change', ja: '変更', ko: '변경' },
   'server.urlLabel':        { 'zh-TW': '伺服器 API 網址', 'zh-CN': '服务器 API 地址', en: 'Server API URL', ja: 'サーバー API の URL', ko: '서버 API URL' },
@@ -328,6 +334,7 @@ const STRINGS = {
   'server.found':           { 'zh-TW': '找到伺服器', 'zh-CN': '找到服务器', en: 'Server found', ja: 'サーバーが見つかりました', ko: '서버를 찾았습니다' },
   'server.switch':          { 'zh-TW': '切換到這台伺服器', 'zh-CN': '切换到这台服务器', en: 'Switch to this server', ja: 'このサーバーに切り替え', ko: '이 서버로 전환' },
   'server.useOfficial':     { 'zh-TW': '改回官方伺服器', 'zh-CN': '改回官方服务器', en: 'Use the official server', ja: '公式サーバーに戻す', ko: '공식 서버로 돌아가기' },
+  'server.useDefault':      { 'zh-TW': '改回預設伺服器', 'zh-CN': '改回默认服务器', en: 'Use the default server', ja: 'デフォルトサーバーに戻す', ko: '기본 서버로 돌아가기' },
   'server.cancel':          { 'zh-TW': '取消', 'zh-CN': '取消', en: 'Cancel', ja: 'キャンセル', ko: '취소' },
   'server.switching':       { 'zh-TW': '切換中…', 'zh-CN': '切换中…', en: 'Switching…', ja: '切り替え中…', ko: '전환 중…' },
   'server.confirmSignOut':  { 'zh-TW': '切換伺服器會登出並重新開啟 App。之後若在新伺服器登入，這台裝置上目前帳號的訊息與檔案會被清除。要繼續嗎？', 'zh-CN': '切换服务器会退出登录并重新打开 App。之后若在新服务器登录，这台设备上当前账号的消息与文件会被清除。要继续吗？', en: 'Switching servers signs you out and restarts the app. If you then sign in on the new server, this device\'s messages and files for the current account are deleted. Continue?', ja: 'サーバーを切り替えるとログアウトし、アプリを再起動します。新しいサーバーでログインすると、この端末の現在のアカウントのメッセージとファイルは削除されます。続けますか？', ko: '서버를 전환하면 로그아웃되고 앱이 다시 시작됩니다. 새 서버에서 로그인하면 이 기기의 현재 계정 메시지와 파일이 삭제됩니다. 계속할까요?' },
@@ -337,6 +344,29 @@ const STRINGS = {
   'server.err.not_aegistrans': { 'zh-TW': '這個網址不是 AegisTrans 伺服器', 'zh-CN': '这个地址不是 AegisTrans 服务器', en: 'That URL is not an AegisTrans server', ja: 'この URL は AegisTrans サーバーではありません', ko: '이 URL은 AegisTrans 서버가 아닙니다' },
   'server.err.bad_config':  { 'zh-TW': '伺服器的連線設定不完整（需要 wss:// 的 MQTT 網址）', 'zh-CN': '服务器的连接设置不完整（需要 wss:// 的 MQTT 地址）', en: 'The server\'s configuration is incomplete (it must provide a wss:// MQTT URL)', ja: 'サーバーの設定が不完全です（wss:// の MQTT URL が必要）', ko: '서버 설정이 불완전합니다(wss:// MQTT URL 필요)' },
   'server.err.save_failed': { 'zh-TW': '無法儲存設定（瀏覽器可能在私密模式）', 'zh-CN': '无法保存设置（浏览器可能在隐私模式）', en: 'Could not save the setting (private browsing?)', ja: '設定を保存できません（プライベートモードの可能性）', ko: '설정을 저장할 수 없습니다(비공개 모드일 수 있음)' },
+
+  // ===== Email 連結確認頁（pages/VerifyPage.tsx）=====
+  'verify.loading':         { 'zh-TW': '載入中…', 'zh-CN': '加载中…', en: 'Loading…', ja: '読み込み中…', ko: '불러오는 중…' },
+  'verify.missingToken':    { 'zh-TW': '連結缺少參數', 'zh-CN': '链接缺少参数', en: 'The link is missing a parameter', ja: 'リンクにパラメーターがありません', ko: '링크에 매개변수가 없습니다' },
+  'verify.title':           { 'zh-TW': '確認登入', 'zh-CN': '确认登录', en: 'Confirm sign-in', ja: 'ログインの確認', ko: '로그인 확인' },
+  'verify.account':         { 'zh-TW': '帳號：', 'zh-CN': '账号：', en: 'Account: ', ja: 'アカウント：', ko: '계정: ' },
+  'verify.device':          { 'zh-TW': '請求登入的裝置：', 'zh-CN': '请求登录的设备：', en: 'Device asking to sign in:', ja: 'ログインを求めている端末：', ko: '로그인을 요청한 기기:' },
+  'verify.unknownDevice':   { 'zh-TW': '未知裝置', 'zh-CN': '未知设备', en: 'Unknown device', ja: '不明な端末', ko: '알 수 없는 기기' },
+  'verify.warnPre':         { 'zh-TW': '如果這不是你目前使用的裝置，', 'zh-CN': '如果这不是你目前使用的设备，', en: 'If this is not the device you are using right now, ', ja: 'これが今お使いの端末でない場合は、', ko: '지금 사용 중인 기기가 아니라면 ' },
+  'verify.warnStrong':      { 'zh-TW': '請不要按確認', 'zh-CN': '请不要按确认', en: 'do not confirm', ja: '確認を押さずに', ko: '확인을 누르지 말고' },
+  'verify.warnPost':        { 'zh-TW': '，直接關閉此頁。連結 15 分鐘後自動失效。', 'zh-CN': '，直接关闭此页。链接 15 分钟后自动失效。', en: ' — just close this page. The link expires in 15 minutes.', ja: 'このページを閉じてください。リンクは 15 分後に無効になります。', ko: ' 이 페이지를 닫으세요. 링크는 15분 후 만료됩니다.' },
+  'verify.confirm':         { 'zh-TW': '確認登入此裝置', 'zh-CN': '确认登录此设备', en: 'Sign in on this device', ja: 'この端末でログイン', ko: '이 기기에서 로그인' },
+  'verify.reject':          { 'zh-TW': '不是我 — 取消', 'zh-CN': '不是我 — 取消', en: 'Not me — cancel', ja: '自分ではない — キャンセル', ko: '제가 아닙니다 — 취소' },
+  'verify.confirming':      { 'zh-TW': '確認中…', 'zh-CN': '确认中…', en: 'Confirming…', ja: '確認中…', ko: '확인 중…' },
+  'verify.successTitle':    { 'zh-TW': '已完成驗證', 'zh-CN': '已完成验证', en: 'Verified', ja: '確認しました', ko: '확인되었습니다' },
+  'verify.successBody1':    { 'zh-TW': '請回到剛才開始登入的地方', 'zh-CN': '请回到刚才开始登录的地方', en: 'Go back to where you started signing in', ja: 'ログインを始めた画面に戻って', ko: '로그인을 시작한 곳으로 돌아가' },
+  'verify.successBody2':    { 'zh-TW': '繼續使用 AegisTrans。', 'zh-CN': '继续使用 AegisTrans。', en: 'to continue with AegisTrans.', ja: 'AegisTrans をご利用ください。', ko: 'AegisTrans를 계속 사용하세요.' },
+  'verify.closeHint':       { 'zh-TW': '你可以關閉此頁。', 'zh-CN': '你可以关闭此页。', en: 'You can close this page.', ja: 'このページは閉じてかまいません。', ko: '이 페이지를 닫아도 됩니다.' },
+  'verify.rejectedTitle':   { 'zh-TW': '已取消', 'zh-CN': '已取消', en: 'Cancelled', ja: 'キャンセルしました', ko: '취소되었습니다' },
+  'verify.rejectedBody1':   { 'zh-TW': '連結未被使用。15 分鐘後自動失效。', 'zh-CN': '链接未被使用。15 分钟后自动失效。', en: 'The link was not used and expires in 15 minutes.', ja: 'リンクは使用されていません。15 分後に無効になります。', ko: '링크는 사용되지 않았으며 15분 후 만료됩니다.' },
+  'verify.rejectedBody2':   { 'zh-TW': '如果你懷疑帳號有人嘗試入侵，建議檢查近期登入活動。', 'zh-CN': '如果你怀疑账号有人尝试入侵，建议检查近期登录活动。', en: 'If you think someone is trying to get into your account, check your recent sign-in activity.', ja: '不正アクセスの疑いがある場合は、最近のログイン履歴を確認してください。', ko: '누군가 계정에 침입하려 한다고 생각되면 최근 로그인 활동을 확인하세요.' },
+  'verify.errorTitle':      { 'zh-TW': '驗證失敗', 'zh-CN': '验证失败', en: 'Verification failed', ja: '確認に失敗しました', ko: '확인 실패' },
+  'verify.errorHint':       { 'zh-TW': '請回到原本登入畫面重新申請新的登入連結。', 'zh-CN': '请回到原本登录画面重新申请新的登录链接。', en: 'Go back to the sign-in screen and request a new link.', ja: 'ログイン画面に戻り、新しいリンクを申請してください。', ko: '로그인 화면으로 돌아가 새 링크를 요청하세요.' },
 } as const satisfies Record<string, LangMap>;
 
 export type AegisStringKey = keyof typeof STRINGS;

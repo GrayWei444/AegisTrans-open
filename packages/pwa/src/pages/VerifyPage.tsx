@@ -15,6 +15,8 @@
 
 import { useEffect, useState } from 'react';
 import { previewMagicToken, confirmMagicToken } from '../services/auth';
+import { useLanguage } from '../i18n/context';
+import { aegisT, type AegisStringKey } from '../i18n/aegistrans-strings';
 
 type State =
   | { kind: 'loading' }
@@ -25,6 +27,8 @@ type State =
   | { kind: 'error'; message: string };
 
 export function VerifyPage() {
+  const { language } = useLanguage();
+  const tr = (key: AegisStringKey) => aegisT(language, key);
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [token, setToken] = useState<string | null>(null);
 
@@ -32,7 +36,7 @@ export function VerifyPage() {
     const params = new URLSearchParams(window.location.search);
     const t = params.get('token');
     if (!t) {
-      setState({ kind: 'error', message: '連結缺少參數' });
+      setState({ kind: 'error', message: aegisT(language, 'verify.missingToken') });
       return;
     }
     setToken(t);
@@ -53,6 +57,8 @@ export function VerifyPage() {
       }
     })();
     return () => { cancelled = true; };
+    // 只在進頁面時跑一次；語言變了不重新驗證
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleConfirm = async () => {
@@ -72,7 +78,7 @@ export function VerifyPage() {
         {state.kind === 'loading' && (
           <>
             <div className="w-12 h-12 mx-auto mb-4 border-4 border-mist-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-on-surface-secondary">載入中…</p>
+            <p className="text-on-surface-secondary">{tr('verify.loading')}</p>
           </>
         )}
 
@@ -84,32 +90,32 @@ export function VerifyPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold mb-3">確認登入</h1>
+            <h1 className="text-2xl font-bold mb-3">{tr('verify.title')}</h1>
             <p className="text-on-surface-secondary leading-relaxed mb-2">
-              帳號：<span className="font-mono text-mist-300">{state.email}</span>
+              {tr('verify.account')}<span className="font-mono text-mist-300">{state.email}</span>
             </p>
             <div className="bg-surface-tertiary rounded-lg px-4 py-3 my-5">
-              <p className="text-xs text-on-surface-tertiary mb-1">請求登入的裝置：</p>
+              <p className="text-xs text-on-surface-tertiary mb-1">{tr('verify.device')}</p>
               <p className="text-sm text-on-surface-primary font-medium break-all">
-                {state.client_label ?? '未知裝置（無 client_label）'}
+                {state.client_label ?? tr('verify.unknownDevice')}
               </p>
             </div>
             <p className="text-sm text-on-surface-secondary leading-relaxed mb-6">
-              如果這不是你目前使用的裝置，<strong className="text-red-400">請不要按確認</strong>，
-              直接關閉此頁。連結 15 分鐘後自動失效。
+              {tr('verify.warnPre')}<strong className="text-red-400">{tr('verify.warnStrong')}</strong>
+              {tr('verify.warnPost')}
             </p>
             <div className="space-y-3">
               <button
                 onClick={handleConfirm}
                 className="w-full py-3 bg-mist-500 hover:bg-mist-600 text-white text-base font-medium rounded-lg transition-colors"
               >
-                確認登入此裝置
+                {tr('verify.confirm')}
               </button>
               <button
                 onClick={() => setState({ kind: 'rejected' })}
                 className="w-full py-3 bg-surface-tertiary hover:bg-surface-secondary text-on-surface-secondary text-base rounded-lg transition-colors"
               >
-                不是我 — 取消
+                {tr('verify.reject')}
               </button>
             </div>
           </>
@@ -118,7 +124,7 @@ export function VerifyPage() {
         {state.kind === 'confirming' && (
           <>
             <div className="w-12 h-12 mx-auto mb-4 border-4 border-mist-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-on-surface-secondary">確認中…</p>
+            <p className="text-on-surface-secondary">{tr('verify.confirming')}</p>
           </>
         )}
 
@@ -130,16 +136,16 @@ export function VerifyPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold mb-3">已完成驗證</h1>
+            <h1 className="text-2xl font-bold mb-3">{tr('verify.successTitle')}</h1>
             <p className="text-on-surface-secondary leading-relaxed mb-2">
               {state.email}
             </p>
             <p className="text-on-surface-secondary leading-relaxed mb-6">
-              請回到剛才開始登入的地方<br/>
-              繼續使用 AegisTrans。
+              {tr('verify.successBody1')}<br/>
+              {tr('verify.successBody2')}
             </p>
             <p className="text-xs text-on-surface-tertiary">
-              你可以關閉此頁。
+              {tr('verify.closeHint')}
             </p>
           </>
         )}
@@ -152,13 +158,13 @@ export function VerifyPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold mb-3">已取消</h1>
+            <h1 className="text-2xl font-bold mb-3">{tr('verify.rejectedTitle')}</h1>
             <p className="text-on-surface-secondary leading-relaxed mb-6">
-              連結未被使用。15 分鐘後自動失效。<br/>
-              如果你懷疑帳號有人嘗試入侵，建議檢查近期登入活動。
+              {tr('verify.rejectedBody1')}<br/>
+              {tr('verify.rejectedBody2')}
             </p>
             <p className="text-xs text-on-surface-tertiary">
-              你可以關閉此頁。
+              {tr('verify.closeHint')}
             </p>
           </>
         )}
@@ -171,12 +177,12 @@ export function VerifyPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold mb-3">驗證失敗</h1>
+            <h1 className="text-2xl font-bold mb-3">{tr('verify.errorTitle')}</h1>
             <p className="text-on-surface-secondary leading-relaxed mb-6">
               {state.message}
             </p>
             <p className="text-xs text-on-surface-tertiary">
-              請回到原本登入畫面重新申請新的登入連結。
+              {tr('verify.errorHint')}
             </p>
           </>
         )}

@@ -571,22 +571,27 @@ def send_magic_link_email(to: str, magic_url: str) -> bool:
     <h1 style="color:#26c6da;margin:0 0 16px;font-size:24px">AegisTrans</h1>
     <p style="margin:0 0 24px;color:#bbb;font-size:14px;line-height:1.6">
      有人（可能是你）正在使用此 email 登入 AegisTrans。<br>
-     點擊下方按鈕完成 email 驗證：
+     點擊下方按鈕完成 email 驗證：<br>
+     <span style="color:#999">Someone (probably you) is signing in to AegisTrans with this email.
+     Tap the button below to verify it.</span>
     </p>
     <p style="margin:0 0 24px;text-align:center">
-     <a href="{magic_url}" style="display:inline-block;background:#26c6da;color:#0d1b2a;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px">完成驗證</a>
+     <a href="{magic_url}" style="display:inline-block;background:#26c6da;color:#0d1b2a;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px">完成驗證 · Verify</a>
     </p>
     <p style="margin:0;color:#888;font-size:12px;line-height:1.5">
      按鈕無法點擊？複製這個連結：<br>
+     Button not working? Copy this link:<br>
      <span style="color:#26c6da;word-break:break-all">{magic_url}</span>
     </p>
     <p style="margin:20px 0 0;color:#bbb;font-size:13px;line-height:1.6;background:rgba(38,198,218,0.08);padding:12px;border-radius:6px;border-left:3px solid #26c6da">
      ✓ 驗證完成後，請回到剛才開始登入的地方，<br>
-     系統會自動完成登入。
+     系統會自動完成登入。<br>
+     <span style="color:#999">After verifying, go back to where you started signing in — it finishes automatically.</span>
     </p>
     <p style="margin:20px 0 0;color:#666;font-size:12px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">
      連結 15 分鐘內有效。<br>
-     如果不是你申請的，請忽略此信，不會發生任何事。
+     如果不是你申請的，請忽略此信，不會發生任何事。<br>
+     The link is valid for 15 minutes. If you didn't ask for it, ignore this email — nothing will happen.
     </p>
    </td></tr>
   </table>
@@ -600,7 +605,7 @@ def send_magic_link_email(to: str, magic_url: str) -> bool:
     msg = MIMEText(html, "html", "utf-8")
     msg["From"] = MAIL_FROM
     msg["To"] = to
-    msg["Subject"] = "AegisTrans Email 驗證連結"
+    msg["Subject"] = "AegisTrans Email 驗證連結 / Sign-in link"
     msg["Date"] = formatdate(localtime=False)
     msg["Message-ID"] = make_msgid(domain=MAIL_MSGID_DOMAIN)
     if MAIL_REPLY_TO:

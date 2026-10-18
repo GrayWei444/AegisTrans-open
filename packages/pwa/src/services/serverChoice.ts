@@ -42,6 +42,8 @@ export interface CustomServer {
 
 export interface ActiveServer {
   isDefault: boolean;
+  /** 連的是官方服務（official-server.json）；自架 build 的預設伺服器與自選伺服器都是 false */
+  isOfficial: boolean;
   /** 本機資料歸屬用：'default' 或 'custom:<apiUrl>' */
   key: string;
   apiUrl: string;
@@ -118,11 +120,17 @@ function cleanLinks(raw: unknown): ServerLinks {
   return out;
 }
 
+/** 這個 build 的預設伺服器是不是官方服務（自架者用 VITE_DEFAULT_API_URL 改預設時為 false） */
+export function defaultServerIsOfficial(): boolean {
+  return !buildEnv().VITE_DEFAULT_API_URL;
+}
+
 function defaultServer(): ActiveServer {
   const e = buildEnv();
   if (e.VITE_DEFAULT_API_URL) {
     return {
       isDefault: true,
+      isOfficial: false,
       key: DEFAULT_SERVER_KEY,
       apiUrl: stripTrailingSlash(e.VITE_DEFAULT_API_URL),
       webApiPath: e.VITE_DEFAULT_WEB_API_PATH || undefined,
@@ -139,6 +147,7 @@ function defaultServer(): ActiveServer {
   }
   return {
     isDefault: true,
+    isOfficial: true,
     key: DEFAULT_SERVER_KEY,
     apiUrl: official.apiUrl,
     webApiPath: official.webApiPath,
@@ -204,6 +213,7 @@ export function getActiveServer(): ActiveServer {
   cached = custom
     ? {
         isDefault: false,
+        isOfficial: false,
         key: customServerKey(custom.apiUrl),
         apiUrl: custom.apiUrl,
         mqttUrl: custom.mqttUrl,

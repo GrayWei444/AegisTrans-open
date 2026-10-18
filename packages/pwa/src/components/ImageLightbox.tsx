@@ -8,6 +8,8 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useLanguage } from '../i18n/context';
+import { aegisT } from '../i18n/aegistrans-strings';
 
 interface ImageLightboxProps {
   blob: Blob;
@@ -16,6 +18,7 @@ interface ImageLightboxProps {
 }
 
 export function ImageLightbox({ blob, name, onClose }: ImageLightboxProps) {
+  const { language } = useLanguage();
   const [url, setUrl] = useState<string>('');
 
   useEffect(() => {
@@ -56,14 +59,14 @@ export function ImageLightbox({ blob, name, onClose }: ImageLightboxProps) {
           <button
             onClick={handleDownload}
             className="px-3 py-1.5 rounded bg-surface-tertiary hover:bg-white/20 text-white text-sm flex items-center gap-1.5"
-            title="下載"
+            title={aegisT(language, 'msg.download')}
           >
-            ⬇ 下載
+            ⬇ {aegisT(language, 'msg.download')}
           </button>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded bg-surface-tertiary hover:bg-white/20 text-white text-lg flex items-center justify-center"
-            title="關閉 (Esc)"
+            title={aegisT(language, 'lightbox.close')}
           >
             ×
           </button>
