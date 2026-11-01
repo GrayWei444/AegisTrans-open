@@ -2,7 +2,7 @@
   <img src="packages/pwa/public/logo-192.png" width="96" alt="AegisTrans 標誌">
 </p>
 
-<h1 align="center">AegisTrans</h1>
+<h1 align="center">AegisTrans 安心傳</h1>
 
 <p align="center">
   <b>把檔案傳給自己的其他裝置——端對端加密、裝置直連、不經過雲端。</b><br>
@@ -78,8 +78,10 @@ npm run android:build    # 接著用 Android Studio 或 Gradle 建置 packages/p
 
 ## 參與貢獻
 
-歡迎開 issue 或送 pull request，請先看 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）。資安問題請依 [SECURITY.md](SECURITY.md) 私下回報，不要公開開 issue。
+歡迎開 issue 或送 pull request，請先看 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）；每個 commit 都要加 DCO 簽署（`git commit -s`）。資安問題請依 [SECURITY.md](SECURITY.md) 私下回報，不要公開開 issue。
 
 ## 授權
 
 [MIT](LICENSE)。第三方元件：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+MIT 授權只涵蓋程式碼，不包括「AegisTrans」「安心傳」名稱與標誌。如果你要發布自己建置的版本，請改用其他名稱和圖示，詳見 [TRADEMARKS.md](TRADEMARKS.md#名稱與標誌)。

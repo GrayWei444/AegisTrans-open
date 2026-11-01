@@ -78,8 +78,10 @@ Changes per release: [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 
-Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Please report security problems privately as described in [SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md); commits need a DCO sign-off (`git commit -s`). Please report security problems privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
 [MIT](LICENSE). Third-party components: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+The MIT License covers the code, not the names AegisTrans and 安心傳 or the logo. If you publish your own build, give it a different name and icon — see [TRADEMARKS.md](TRADEMARKS.md).

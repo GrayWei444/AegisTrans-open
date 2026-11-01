@@ -42,3 +42,17 @@ resolvable from `packages/pwa` (they are dependencies there after `npm ci`).
 - New third-party code must use a permissive license that fits an MIT project
   (e.g. MIT, BSD, ISC, Apache-2.0) and be added to `THIRD_PARTY_NOTICES.md`.
 - Commit messages: `<type>: <description>` (feat, fix, refactor, docs, test, chore, perf, ci).
+
+## Sign-off (DCO)
+
+Every commit must be signed off with `git commit -s`, which adds a line like
+`Signed-off-by: Your Name <you@example.com>`. You may use your GitHub no-reply
+address. By signing off you certify the
+[Developer Certificate of Origin 1.1](https://developercertificate.org/): you
+wrote the change, or otherwise have the right to submit it under this project's
+MIT license. Pull requests with commits that are not signed off are not merged.
+
+## Name and logo
+
+Contributing does not change the rules for the AegisTrans and 安心傳 names and
+the logo: the MIT License covers the code only. See [TRADEMARKS.md](TRADEMARKS.md).
