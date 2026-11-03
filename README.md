@@ -1,87 +1,90 @@
 <p align="center">
-  <img src="packages/pwa/public/logo-192.png" width="96" alt="AegisTrans logo">
+  <img src="packages/pwa/public/logo-192.png" width="96" alt="AegisTrans 標誌">
 </p>
 
-<h1 align="center">AegisTrans</h1>
+<h1 align="center">安心傳 AegisTrans</h1>
 
 <p align="center">
-  <b>Send files to your own devices — end-to-end encrypted, peer-to-peer, no cloud.</b><br>
-  English · <a href="README.zh-TW.md">繁體中文</a>
+  <b>把檔案傳給自己的其他裝置——端對端加密、裝置直連、不經過雲端。</b><br>
+  <b>繁體中文</b> ｜ <a href="README.en.md">English</a>
 </p>
+
+> **English** — AegisTrans sends files to your own devices: end-to-end encrypted, peer-to-peer, no cloud.
+> Android, iOS, desktop and web; self-hostable. MIT. Full English README: [README.en.md](README.en.md).
 
 <p align="center">
-  <img src="docs/assets/demo.gif" width="900" alt="A photo sent from a phone arrives on a laptop">
+  <img src="docs/assets/demo.gif" width="900" alt="手機傳出一張照片，筆電收到">
 </p>
 
-## Install
+## 安裝
 
-- **Android** — download the APK from [Releases](../../releases/latest) and open it (allow "install unknown apps" when asked).
-- **Any browser** — open [trans.aegisrd.com](https://trans.aegisrd.com). Nothing to install.
-- **Desktop and iOS** — build from source for now (see [Building](#building)).
+- **Android**：到 [Releases](../../releases/latest) 下載 APK 並開啟（系統詢問時，允許「安裝不明應用程式」）。
+- **任何瀏覽器**：打開 [trans.aegisrd.com](https://trans.aegisrd.com)，不用安裝。
+- **桌面版與 iOS**：目前請從原始碼建置（見[建置](#建置)）。
 
-Sign up with an email on one device, then sign in with the same email on the next. That's the pairing — no QR codes, no codes to type.
+在一台裝置用 email 註冊，另一台用同一個 email 登入，就完成配對了。不用掃 QR，也不用輸入配對碼。
 
-## Features
+## 功能
 
-- **Peer-to-peer** — files go straight from device to device over WebRTC. No cloud copy, no relay server.
-- **End-to-end encrypted** — X3DH + Double Ratchet in a Rust → WebAssembly core. Keys never leave your devices.
-- **Original files** — no compression, EXIF and RAW kept, any file type, no links that expire.
-- **Every platform** — Android, iOS, Windows, macOS, Linux and any modern browser.
-- **Our server or yours** — the official server by default; switch to your own in Settings → Server.
+- **裝置直連**：檔案透過 WebRTC 從一台裝置直接傳到另一台，雲端不留副本，也沒有中繼伺服器。
+- **端對端加密**：用 X3DH 與 Double Ratchet，加密核心以 Rust 寫成並編譯為 WebAssembly。金鑰只存在你的裝置上。
+- **原檔傳送**：不壓縮，保留 EXIF 與 RAW，任何檔案類型都可以，也沒有會過期的連結。
+- **全平台**：Android、iOS、Windows、macOS、Linux 與一般瀏覽器。
+- **用官方伺服器或自己架**：預設連官方伺服器，可在「設定 → 伺服器」改成你自己的。
 
-## How it works
+## 運作方式
 
 ```mermaid
 flowchart LR
-    P["📱 Phone"] <== "files and messages<br/>WebRTC · end-to-end encrypted" ==> L["💻 Laptop"]
-    P -. "sign-in · device list · signaling" .-> S[("Server<br/>API + MQTT")]
+    P["📱 手機"] <== "檔案與訊息<br/>WebRTC · 端對端加密" ==> L["💻 筆電"]
+    P -. "登入 · 裝置清單 · 連線協調" .-> S[("伺服器<br/>API + MQTT")]
     L -.-> S
 ```
 
-The server knows your email address and your device list, and passes encrypted signaling between your devices. It never receives file contents. Messages for an offline device wait on the broker as encrypted envelopes; files are fetched directly from your other device once both are online. There is no TURN relay by design (STUN is used only to discover the network path), so two networks that block every direct connection cannot transfer.
+伺服器知道你的 email 和裝置清單，並在你的裝置之間轉交加密的連線協調訊息，但不會收到檔案內容。給離線裝置的訊息，會以加密封包的形式暫存在推播伺服器；檔案則等兩台都上線後，直接從你的另一台裝置取得。我們刻意不設 TURN 中繼伺服器，STUN 只用來找出連線路徑，所以如果兩邊的網路都擋掉直連，就沒辦法傳送。
 
-## Self-hosting
+## 自架伺服器
 
-Run the API, an MQTT broker and the web app yourself, then point the app at your server in Settings → Server: [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md).
+自己架 API、MQTT 推播伺服器與網頁版，再到 App 的「設定 → 伺服器」改成你的伺服器：[docs/SELF_HOSTING.md](docs/SELF_HOSTING.md)（英文）。
 
-## Building
+## 建置
 
-Requirements: Node.js 20+, Rust (rustup) and `wasm-pack` 0.13.1 for the encryption core, Android Studio or Xcode for the mobile apps.
+需要 Node.js 20 以上；建置加密核心需要 Rust（rustup）與 `wasm-pack` 0.13.1；手機版需要 Android Studio 或 Xcode。
 
 ```bash
 cd packages/aegis-display && npm install
 cd ../pwa && npm ci
-npm run build            # compiles the crypto core from source if missing, then the web app
-npm run android:build    # then build packages/pwa/android with Android Studio or Gradle
+npm run build            # 缺加密核心時會先從原始碼編譯，再建置網頁版
+npm run android:build    # 接著用 Android Studio 或 Gradle 建置 packages/pwa/android
 ```
 
-The encryption core builds reproducibly: [packages/crypto-core](packages/crypto-core/README.md) and [BUILD_PROVENANCE.md](BUILD_PROVENANCE.md).
+加密核心可重現建置：見 [packages/crypto-core](packages/crypto-core/README.md) 與 [BUILD_PROVENANCE.md](BUILD_PROVENANCE.md)。
 
-| Path | What |
+| 路徑 | 內容 |
 |---|---|
-| `packages/pwa` | The app — React PWA; Android and iOS via Capacitor, desktop via Electron |
-| `packages/crypto-core` | X3DH + Double Ratchet core (Rust, compiled to WebAssembly) |
-| `packages/aegis-display` | Screen-sharing / virtual display plugin |
-| `api` | FastAPI server (`api/app.py` for self-hosting) |
-| `scripts/check-*` | Regression checks |
+| `packages/pwa` | App 本體：React PWA；Android／iOS 用 Capacitor，桌面版用 Electron |
+| `packages/crypto-core` | X3DH 與 Double Ratchet 加密核心（Rust，編譯為 WebAssembly） |
+| `packages/aegis-display` | 螢幕分享／虛擬螢幕外掛 |
+| `api` | FastAPI 伺服器（自架用 `api/app.py`） |
+| `scripts/check-*` | 回歸檢查 |
 
-## Roadmap
+## 路線圖
 
-- [x] Android, iOS, desktop and web clients
-- [x] Self-hosting and in-app server switch
-- [x] Open-source release (MIT)
-- [ ] Desktop and iOS builds in Releases
-- [ ] Google Play and App Store listings
-- [ ] Verifiable builds: check that a released APK matches this source
+- [x] Android、iOS、桌面與網頁版
+- [x] 自架伺服器與 App 內切換伺服器
+- [x] 開源（MIT）
+- [ ] 桌面版與 iOS 版放上 Releases
+- [ ] 上架 Google Play 與 App Store
+- [ ] 可驗證建置：確認發布的 APK 與這份原始碼一致
 
-Changes per release: [CHANGELOG.md](CHANGELOG.md).
+各版本變更：[CHANGELOG.md](CHANGELOG.md)。
 
-## Contributing
+## 參與貢獻
 
-Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md); commits need a DCO sign-off (`git commit -s`). Please report security problems privately as described in [SECURITY.md](SECURITY.md).
+歡迎開 issue 或送 pull request，請先看 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）；每個 commit 都要加 DCO 簽署（`git commit -s`）。資安問題請依 [SECURITY.md](SECURITY.md) 私下回報，不要公開開 issue。
 
-## License
+## 授權
 
-[MIT](LICENSE). Third-party components: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE)。第三方元件：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-The MIT License covers the code, not the names AegisTrans and 安心傳 or the logo. If you publish your own build, give it a different name and icon — see [TRADEMARKS.md](TRADEMARKS.md).
+MIT 授權只涵蓋程式碼，不包括「AegisTrans」「安心傳」名稱與標誌。如果你要發布自己建置的版本，請改用其他名稱和圖示，詳見 [TRADEMARKS.md](TRADEMARKS.md#名稱與標誌)。
