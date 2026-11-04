@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Official builds now ship the reproducible build of `packages/crypto-core` (see `BUILD_PROVENANCE.md`). Earlier official builds used an older prebuilt binary that still logged fragments of key material to the console.
+- Security updates for shipped dependencies: Capacitor 8.6.0, PDF.js 6.5 (GHSA-hq66-cqwq-w95j), React Router 6.30.6, and transitive updates on web and desktop.
+- CI runs on the `main` branch.
+
 ## 1.0.6 — 2026-10-18
 
 First public source release.

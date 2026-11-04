@@ -3,7 +3,7 @@ name: CI (release gate)
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [master, main]
 
 jobs:
   gate:

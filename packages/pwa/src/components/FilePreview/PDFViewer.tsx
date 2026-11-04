@@ -45,7 +45,7 @@ export function PDFViewer({ src, fileName, onClose }: PDFViewerProps) {
         setLoading(true);
         setError(null);
 
-        const loadingTask = pdfjsLib.getDocument(src);
+        const loadingTask = pdfjsLib.getDocument({ url: src }); // pdfjs 6 不再收字串
         const pdf = await loadingTask.promise;
 
         if (cancelled) return;

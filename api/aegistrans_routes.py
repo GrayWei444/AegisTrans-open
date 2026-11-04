@@ -1,17 +1,12 @@
 """
 AegisTrans Auth + Subscription Router
 =====================================
-Email magic link 登入 + 訂閱狀態查詢。兩種跑法：
-- 官方部署：掛在既有的 API process 裡（同 process / 同 SQLite），沿用下方「官方部署預設值」。
+登入（email magic link／密碼）、裝置、MQTT token 與訂閱。兩種跑法：
+- 官方部署：獨立服務（自己的 process 與 SQLite），沿用下方「官方部署預設值」。
 - 自架：api/app.py（AEGISTRANS_PROFILE=standalone），所有設定從環境變數來（api/.env.example）。
-- POST /aegistrans/auth/email/request
-- GET  /aegistrans/auth/email/verify
-- GET  /aegistrans/auth/me
-- GET  /aegistrans/subscription/status
-- POST /aegistrans/subscription/dev-set-tier      (dev only — e2e/dogfood 用)
-- POST /aegistrans/subscription/lemonsqueezy-webhook  (Phase 1B 填簽章驗證)
 
-Tables 用 aegistrans_ prefix，與 AegisTalk tables 共存不衝突。
+端點：/aegistrans/auth/*（magic link、密碼、裝置、MQTT token）與 /aegistrans/subscription/*
+（狀態、App Store／Google Play 驗證與通知）；完整列表見 api/README.md。Tables 用 aegistrans_ prefix。
 """
 import os
 import sqlite3
@@ -35,7 +30,7 @@ from pydantic import BaseModel, Field
 
 
 # ===== Config =====
-# 官方部署的預設值：只在 router 掛在官方 API process 裡時用（AEGISTRANS_PROFILE 沒設或不是 standalone）。
+# 官方部署的預設值：官方服務用（AEGISTRANS_PROFILE 沒設或不是 standalone）；環境變數仍可覆寫。
 # 自架的 api/app.py 會設 AEGISTRANS_PROFILE=standalone → 一律只讀環境變數，不會沿用官方的寄件人、網址或路徑。
 # scripts/oss/export-public.sh 匯出公開版時會把 BEGIN／END 之間換成空字典。
 _OFFICIAL_DEFAULTS = {}  # official deployment values are not part of the public source

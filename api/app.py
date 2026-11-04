@@ -4,8 +4,8 @@ Run:  uvicorn app:create_app --factory --host 0.0.0.0 --port 8000   (from the ap
 
 Every setting comes from environment variables (see api/.env.example). Nothing falls
 back to the official service: AEGISTRANS_PROFILE is forced to "standalone" before the
-router module is imported. The official deployment keeps mounting the same routers
-inside its existing API process instead of using this file.
+router module is imported. The official service runs the same routers as its own
+process with its own database; it just does not use this file.
 """
 import os
 from urllib.parse import urlsplit

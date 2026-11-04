@@ -1,6 +1,6 @@
 # Build Provenance — E2EE WASM core
 
-Last verified: 2026-10-17
+Last verified: 2026-11-04
 
 ## Source
 
@@ -31,7 +31,14 @@ shared secrets, DH outputs, chain keys and public keys were removed (the exporte
 API and the `.d.ts` files are unchanged; the JS glue no longer imports
 `console.log`).
 
-## Binary that currently ships (`packages/pwa/src/wasm/pkg/`)
+## Binary that ships (`packages/pwa/src/wasm/pkg/`)
+
+Since 2026-11-04 the official builds ship the reproducible build above (`.wasm`
+variant B, `4679275…`), produced by `build.sh --verify` with rustc 1.90.0 and
+wasm-pack 0.13.1 on Linux. Apps and the web build pick it up from their next
+release; builds made before that date still contain the older binary below.
+
+### Previous binary (shipped until 2026-11-04)
 
 | File | Size | SHA-256 |
 |---|---|---|
@@ -39,7 +46,9 @@ API and the `.d.ts` files are unchanged; the JS glue no longer imports
 | `safetalk_core.js` | 53,921 | `85b8b9ba39239bfca30cda7701f93aa42774ec918294c675878ba663cad11361` |
 | `safetalk_core.d.ts` | 15,389 | `0b691f17f99fd09ad0ada9477756f7bd25a5a0d36358a316e12da358a9ccd027` |
 
-### Comparison (2026-10-17, made with the source as imported — before the logging removal)
+It contains the key-material console logging that the source no longer has.
+
+#### Comparison (2026-10-17, made with the source as imported — before the logging removal)
 
 - `safetalk_core.js`, `safetalk_core.d.ts`, `safetalk_core_bg.wasm.d.ts` and
   `package.json`: **byte-identical** to the reproducible build — same exported
@@ -60,15 +69,6 @@ API and the `.d.ts` files are unchanged; the JS glue no longer imports
   Remaining candidates: different versions of dependencies that leave no path
   string (e.g. `x25519-dalek`, `aes-gcm`, `uuid`, `zeroize`), a different
   profile/workspace setting, or a small source difference.
-
-### Production must be rebuilt from this source
-
-The binary in `packages/pwa/src/wasm/pkg/` (and in the deployed apps) still
-contains the key-material console logging that the source no longer has. It was
-deliberately not replaced in this change. Rebuild it with
-`packages/crypto-core/build.sh --verify --install`, test the apps, and ship that
-build — then the published source and the shipped binary match (one of the two
-listed `.wasm` variants).
 
 ## Rule
 
