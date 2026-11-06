@@ -1,9 +1,10 @@
 /**
  * UpgradePage — 訂閱升級頁
  *
- * 收費策略（決策時間 2026-05-04）：
- *   - PWA 永遠免費（free tier 限制：2GB / 2 裝置）
- *   - 撞牆 → 引導下載 iOS / Android App → 用 StoreKit / Play Billing 內購
+ * 收費策略（2026-11-06 Gray 改）：
+ *   - 沒有免費版。官方伺服器上要訂閱才能傳送；新用戶在 iOS / Android App 用商店的免費試用 14 天
+ *     （ASC 訂閱優惠／Play base plan 優惠，商店自己管資格），之後自動轉付費
+ *   - web / 桌面沒有商店 → 引導到手機 App 訂閱；自架伺服器不收費（tierGate.billingApplies）
  *   - 抽成 15% (Small Biz < $1M/yr) / 30%，但繞過台灣 Stripe Connect 個人 KYC 風險
  *   - License server 統一：iOS 付的、Android 付的，PWA 都認（透過 GET /subscription/status）
  *
@@ -117,6 +118,8 @@ export function UpgradePage({ onClose }: UpgradePageProps) {
   const upgradePlans = PLANS.filter((p) =>
     TIER_RANK[p.tier] > TIER_RANK[status.tier] && (!status.isPro || p.tier === 'pro_lifetime'));
 
+  const trialDays = Math.max(0, ...products.map((p) => p.freeTrialDays ?? 0));
+
   const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
     if (!nativeIap) return;
@@ -214,6 +217,12 @@ export function UpgradePage({ onClose }: UpgradePageProps) {
         </button>
       </div>
 
+      {!status.isPro && (
+        <p className="text-sm text-on-surface-secondary" data-testid="upgrade-sub-required">
+          {aegisT(language, 'upgrade.subRequired')}
+        </p>
+      )}
+
       {/* Pro 後顯示確認 */}
       {status.isPro && (
         <section
@@ -281,6 +290,12 @@ export function UpgradePage({ onClose }: UpgradePageProps) {
           <h2 className="text-lg font-semibold text-on-surface-primary text-center">
             {aegisT(language, 'upgrade.iapTitle')}
           </h2>
+          {/* 審核 3.1.1：試用開始前要寫清楚天數、到期後少了什麼、之後要付多少（價格在按鈕上） */}
+          {!status.isPro && trialDays > 0 && (
+            <p className="text-xs leading-relaxed text-on-surface-secondary" data-testid="iap-trial-terms">
+              {aegisT(language, 'upgrade.trialTerms').replace('{days}', String(trialDays))}
+            </p>
+          )}
           <div className="space-y-2">
             {upgradePlans.map((plan) => {
               const product = products.find((p) => PRODUCT_TO_TIER[p.id] === plan.tier);
@@ -302,8 +317,17 @@ export function UpgradePage({ onClose }: UpgradePageProps) {
                         </span>
                       )}
                     </span>
-                    <span className="font-mono">
-                      {pendingTier === plan.tier ? aegisT(language, 'upgrade.processing') : product.displayPrice}
+                    <span className="font-mono text-right">
+                      {pendingTier === plan.tier
+                        ? aegisT(language, 'upgrade.processing')
+                        : product.freeTrialDays
+                          ? (
+                            <span className="flex flex-col leading-tight" data-testid={`iap-trial-${plan.tier}`}>
+                              <span>{aegisT(language, 'upgrade.trialBadge').replace('{days}', String(product.freeTrialDays))}</span>
+                              <span className="text-xs opacity-80">{aegisT(language, 'upgrade.trialThen').replace('{price}', product.displayPrice)}</span>
+                            </span>
+                          )
+                          : product.displayPrice}
                     </span>
                   </button>
                   {/* 訂閱中買終身的兩步確認（含「舊訂閱怎麼辦」說明） */}

@@ -165,7 +165,7 @@ public class IapPlugin extends Plugin implements PurchasesUpdatedListener {
         item.put("type", details.getProductType().equals(BillingClient.ProductType.SUBS) ? "auto_renewable" : "non_consumable");
 
         if (details.getProductType().equals(BillingClient.ProductType.SUBS) && details.getSubscriptionOfferDetails() != null && !details.getSubscriptionOfferDetails().isEmpty()) {
-            ProductDetails.SubscriptionOfferDetails offer = details.getSubscriptionOfferDetails().get(0);
+            ProductDetails.SubscriptionOfferDetails offer = pickOffer(details.getSubscriptionOfferDetails());
             List<ProductDetails.PricingPhase> phases = offer.getPricingPhases().getPricingPhaseList();
             if (!phases.isEmpty()) {
                 ProductDetails.PricingPhase phase = phases.get(phases.size() - 1);
@@ -174,6 +174,11 @@ public class IapPlugin extends Plugin implements PurchasesUpdatedListener {
                 item.put("currencyCode", phase.getPriceCurrencyCode());
                 item.put("subscriptionPeriod", phase.getBillingPeriod());
             }
+            // Play 只回傳「這個使用者有資格」的優惠 → 有免費階段就代表能試用
+            ProductDetails.PricingPhase trial = freePhase(offer);
+            if (trial != null) {
+                item.put("freeTrialDays", periodDays(trial.getBillingPeriod()) * Math.max(1, trial.getBillingCycleCount()));
+            }
         } else if (details.getOneTimePurchaseOfferDetails() != null) {
             ProductDetails.OneTimePurchaseOfferDetails offer = details.getOneTimePurchaseOfferDetails();
             item.put("displayPrice", offer.getFormattedPrice());
@@ -181,6 +186,33 @@ public class IapPlugin extends Plugin implements PurchasesUpdatedListener {
             item.put("currencyCode", offer.getPriceCurrencyCode());
         }
         return item;
+    }
+
+    /** 有免費試用優惠就用它（新用戶 14 天免費），否則用 base plan；Play 回傳的順序不保證。 */
+    static ProductDetails.SubscriptionOfferDetails pickOffer(List<ProductDetails.SubscriptionOfferDetails> offers) {
+        for (ProductDetails.SubscriptionOfferDetails o : offers) if (freePhase(o) != null) return o;
+        for (ProductDetails.SubscriptionOfferDetails o : offers) if (o.getOfferId() == null) return o;
+        return offers.get(0);
+    }
+
+    static ProductDetails.PricingPhase freePhase(ProductDetails.SubscriptionOfferDetails offer) {
+        for (ProductDetails.PricingPhase p : offer.getPricingPhases().getPricingPhaseList()) {
+            if (p.getPriceAmountMicros() == 0) return p;
+        }
+        return null;
+    }
+
+    /** ISO 8601 期間（P14D / P2W / P1M / P1Y）→ 天數。ponytail: 月、年用 30／365 天近似，只拿來顯示。 */
+    static int periodDays(String iso) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^P(\\d+)([DWMY])$").matcher(iso == null ? "" : iso);
+        if (!m.matches()) return 0;
+        int n = Integer.parseInt(m.group(1));
+        switch (m.group(2)) {
+            case "W": return n * 7;
+            case "M": return n * 30;
+            case "Y": return n * 365;
+            default: return n;
+        }
     }
 
     @PluginMethod
@@ -215,7 +247,7 @@ public class IapPlugin extends Plugin implements PurchasesUpdatedListener {
                 call.reject("No eligible subscription offer: " + productId);
                 return;
             }
-            productParams.setOfferToken(offers.get(0).getOfferToken());
+            productParams.setOfferToken(pickOffer(offers).getOfferToken());
         }
         BillingFlowParams.Builder flow = BillingFlowParams.newBuilder().setProductDetailsParamsList(Collections.singletonList(productParams.build()));
         String account = call.getString("appAccountToken");

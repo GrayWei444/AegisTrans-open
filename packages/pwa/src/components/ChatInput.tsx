@@ -18,7 +18,7 @@ import { useLanguage } from '../i18n/context';
 import { aegisT } from '../i18n/aegistrans-strings';
 import { precheckStorageFor, formatBytes } from '../services/storageEstimate';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
-import { isTierGateError, checkSingleFileSize, SINGLE_FILE_IDB_MAX, isFsSendPlatform } from '../services/tierGate';
+import { isTierGateError, checkSingleFileSize, requireSubscription, SINGLE_FILE_IDB_MAX, isFsSendPlatform } from '../services/tierGate';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
@@ -72,6 +72,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
       await onSendText(t);
     } catch (err) {
       setMessage(t);
+      if (isTierGateError(err)) {
+        useSubscriptionStore.getState().openPaywall({ reason: err.reason, details: err.details });
+        return;
+      }
       showError(`送訊息失敗：${(err as Error).message}`);
     }
   };
@@ -88,8 +92,9 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(function Ch
    * 避免「點 📎 → 選非圖檔 → 自動送 → fail silently」的 UX 黑洞。
    */
   const processFile = useCallback(async (file: File) => {
-    // 單檔上限（>2GB stream-to-disk）：web 2GB 硬邊界；native free 2GB → paywall；native Pro 不限
+    // 先擋未訂閱（選完檔就告訴使用者，不等寫完說明才擋）；再看單檔上限（web 2GB 硬邊界）
     try {
+      await requireSubscription();
       if ((await checkSingleFileSize(file.size)) === 'platform_limit') {
         showError(aegisT(language, 'chat.error.tooLarge'));
         return;

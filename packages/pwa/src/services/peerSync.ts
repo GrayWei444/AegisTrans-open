@@ -40,12 +40,12 @@ import {
 } from './fileTransfer';
 import {
   ENVELOPE_PROTOCOL_VERSION,
-  buildEncryptedEnvelope,
   buildEncryptedEnvelopeOrGenerate,
   decryptEnvelope,
 } from './groupKeyEnvelope';
 import { devLog } from '../utils/devLog';
 import { isAccountDevice, goneDeviceTracker } from './accountDevices';
+import { requireSubscription } from './tierGate';
 
 let currentLocalPubkeyBase64: string | null = null;
 
@@ -400,11 +400,13 @@ export async function observeAccountDeviceList(accountPubkeys: string[]): Promis
  * 永遠加密，絕不 fallback 到明文 envelope — application-layer E2EE 不可被靜默繞過。
  */
 export async function sendTextMessage(content: string): Promise<Message> {
+  const trimmed = content.trim();
+  if (!trimmed) throw new Error('Empty message');
+  // 訂閱先擋（跟 sendFile 一樣在連線檢查之前）：沒訂閱就該看到「需要訂閱」，不是連線錯誤
+  await requireSubscription();
   if (!currentUserId || !currentDeviceId || !currentLocalPubkeyBase64) {
     throw new Error('[PeerSync] not initialized');
   }
-  const trimmed = content.trim();
-  if (!trimmed) throw new Error('Empty message');
 
   diagLog(`[DIAG:send] start peers=${knownPeerPubkeys.size} content_len=${trimmed.length}`);
 
@@ -454,9 +456,18 @@ export function onMessageDeleted(cb: MessageDeletedListener): () => void {
 
 /** Pull-model：B 點「下載」→ 對單一 sender peer 發 file_request envelope。 */
 export async function sendFileRequest(targetPeer: string, fileId: string): Promise<void> {
-  if (!currentUserId) return;
-  const payload = await buildEncryptedEnvelope(currentUserId, 'encrypted_file_request', { fileId });
-  if (!payload) return;
+  if (!currentUserId || !currentLocalPubkeyBase64) throw new Error('[PeerSync] not initialized');
+  // 跟 sendTextMessage 一樣「沒 active key 就現生一把」、失敗 throw（2026-11-06）：
+  // 新裝置還沒送過東西時只有「回應 group_key_request 補來的 key」，那種 key 只能解密、不算 active
+  // （groupKey.ts LOW-1）→ 舊碼 buildEncryptedEnvelope 回 null 就靜默 return，fetchFile 卻照樣
+  // 標「接收中 0%」→ 卡到 60s watchdog（E2E file-types .exe 偶發抓到）。
+  const payload = await buildEncryptedEnvelopeOrGenerate(
+    currentUserId,
+    currentLocalPubkeyBase64,
+    'encrypted_file_request',
+    { fileId },
+    Array.from(knownPeerPubkeys),
+  );
   void sendViaP2P(targetPeer, payload);
   devLog(`[PeerSync] FILE_REQUEST sent to ${targetPeer.slice(0, 8)} for ${fileId}`);
 }
@@ -464,13 +475,19 @@ export async function sendFileRequest(targetPeer: string, fileId: string): Promi
 /** 跨裝置廣播刪訊息：對 knownPeerPubkeys 全部送一份 encrypted_delete envelope。
  *  抄 AegisTalk DELETE_MESSAGE pattern，但走 Group Key + WebRTC（離線會 enqueue）。 */
 export async function sendDeleteMessage(messageId: string): Promise<void> {
-  if (!currentUserId) return;
+  if (!currentUserId || !currentLocalPubkeyBase64) return;
   if (knownPeerPubkeys.size === 0) {
     devLog('[PeerSync] sendDeleteMessage: no peers to notify');
     return;
   }
-  const payload = await buildEncryptedEnvelope(currentUserId, 'encrypted_delete', { messageId });
-  if (!payload) return;
+  // 同 sendFileRequest：沒 active key 就現生一把，不靜默放棄（失敗 throw，呼叫端 .catch 記錄）
+  const payload = await buildEncryptedEnvelopeOrGenerate(
+    currentUserId,
+    currentLocalPubkeyBase64,
+    'encrypted_delete',
+    { messageId },
+    Array.from(knownPeerPubkeys),
+  );
   for (const peerPubkey of knownPeerPubkeys) {
     void sendViaP2P(peerPubkey, payload);
   }

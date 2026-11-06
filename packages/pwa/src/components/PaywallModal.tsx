@@ -2,11 +2,11 @@
  * PaywallModal — 撞牆觸發、引導升級
  *
  * 觸發點：
- *   - sendFile 撞 storage_quota_exceeded
+ *   - 傳送檔案／文字 撞 subscription_required（官方伺服器、未訂閱或試用到期）
+ *   - sendFile 撞 storage_quota_exceeded（本機空間不足 —— 不是付費問題，不給升級鈕）
  *   - registerCurrentDevice 撞 device_limit_exceeded
  *
  * 由 useSubscriptionStore.paywall 控制（non-null = 開）。
- * 三個 CTA：升級 / 改另一台裝置（device_limit）/ 清空舊檔（storage_quota）/ 取消
  */
 
 import { useEffect } from 'react';
@@ -14,7 +14,7 @@ import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { aegisT } from '../i18n/aegistrans-strings';
 import { useLanguage } from '../i18n/context';
 import { formatBytes } from '../services/storageEstimate';
-import type { QuotaDetails, DeviceLimitDetails, SingleFileDetails } from '../services/tierGate';
+import type { QuotaDetails, DeviceLimitDetails } from '../services/tierGate';
 
 interface PaywallModalProps {
   onUpgradeClick: () => void;
@@ -36,19 +36,16 @@ export function PaywallModal({ onUpgradeClick, onManageDevicesClick }: PaywallMo
   if (!paywall) return null;
 
   const isQuota = paywall.reason === 'storage_quota_exceeded';
-  const isFile = paywall.reason === 'single_file_too_large';
+  const isSub = paywall.reason === 'subscription_required';
   const title = isQuota
     ? aegisT(language, 'paywall.quotaTitle')
-    : isFile
-      ? aegisT(language, 'paywall.fileTitle')
+    : isSub
+      ? aegisT(language, 'paywall.subTitle')
       : aegisT(language, 'paywall.deviceTitle');
 
   let body: string;
-  if (isFile) {
-    const d = paywall.details as SingleFileDetails;
-    body = aegisT(language, 'paywall.fileBody')
-      .replace('{size}', formatBytes(d.size))
-      .replace('{limit}', formatBytes(d.limit));
+  if (isSub) {
+    body = aegisT(language, 'paywall.subBody');
   } else if (isQuota) {
     const d = paywall.details as QuotaDetails;
     body = aegisT(language, 'paywall.quotaBody')
@@ -94,15 +91,17 @@ export function PaywallModal({ onUpgradeClick, onManageDevicesClick }: PaywallMo
         </p>
 
         <div className="flex flex-col gap-2">
-          <button
-            onClick={() => { closePaywall(); onUpgradeClick(); }}
-            className="w-full px-4 py-3 rounded-md bg-mist-500 hover:bg-mist-400 text-navy-900 font-medium"
-            data-testid="paywall-upgrade-btn"
-          >
-            {aegisT(language, 'paywall.upgradeBtn')}
-          </button>
+          {!isQuota && (
+            <button
+              onClick={() => { closePaywall(); onUpgradeClick(); }}
+              className="w-full px-4 py-3 rounded-md bg-mist-500 hover:bg-mist-400 text-navy-900 font-medium"
+              data-testid="paywall-upgrade-btn"
+            >
+              {aegisT(language, 'paywall.upgradeBtn')}
+            </button>
+          )}
 
-          {!isQuota && !isFile && (
+          {!isQuota && !isSub && (
             <button
               onClick={() => { closePaywall(); onManageDevicesClick(); }}
               className="w-full px-4 py-3 rounded-md bg-surface-tertiary hover:opacity-90 text-on-surface-primary border border-[var(--surface-border)]"

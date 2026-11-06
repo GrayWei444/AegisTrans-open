@@ -1,9 +1,11 @@
 /**
- * Tier Gate — 收費限制判定（1A.7）
+ * Tier Gate — 收費限制判定
  *
- * 兩個 gate：
- *   1. 上傳檔案：免費版總儲存 min(2GB, deviceQuota)；Pro = deviceQuota
- *   2. 裝置數量：免費 2 台 / Pro 10 台（後端 hard cap 16，這裡是更嚴格的 tier limit）
+ * 2026-11-06 Gray 改成「沒有免費版：商店免費試用 14 天 → 訂閱」：
+ *   1. 官方伺服器：未訂閱（含試用到期）不能傳送檔案、文字、螢幕 → requireSubscription()
+ *      已收到的檔案仍可開啟（不扣住使用者自己的資料）
+ *   2. 自架伺服器（設定裡換伺服器、或 VITE_DEFAULT_API_URL build）不收費 —— 賣的是官方服務
+ *   3. 裝置數量：未訂閱 2 台 / Pro 10 台（後端寫死，hard cap 16）
  *
  * 使用：sendFile 進入點先 await checkUploadQuota(file.size)；
  * 撞牆 → throw TierGateError → ChatInput / Settings 顯示 paywall modal。
@@ -17,8 +19,9 @@
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import type { Tier } from './subscription';
 import { getNativeFileStream } from './nativeFileStream';
+import { getActiveServer } from './serverChoice';
 
-export type TierGateReason = 'storage_quota_exceeded' | 'device_limit_exceeded' | 'single_file_too_large';
+export type TierGateReason = 'storage_quota_exceeded' | 'device_limit_exceeded' | 'subscription_required';
 
 export interface QuotaDetails {
   used: number;
@@ -33,31 +36,48 @@ export interface DeviceLimitDetails {
   tier: Tier;
 }
 
-export interface SingleFileDetails {
-  size: number;
-  limit: number;
+export interface SubscriptionDetails {
   tier: Tier;
 }
+
+export type TierGateDetails = QuotaDetails | DeviceLimitDetails | SubscriptionDetails;
 
 export class TierGateError extends Error {
   constructor(
     public readonly reason: TierGateReason,
-    public readonly details: QuotaDetails | DeviceLimitDetails | SingleFileDetails,
+    public readonly details: TierGateDetails,
   ) {
     super(reason);
     this.name = 'TierGateError';
   }
 }
 
+/** 只有官方伺服器收費。 */
+export function billingApplies(): boolean {
+  return getActiveServer().isOfficial;
+}
+
+/** 傳送（檔案／文字）前呼叫：官方伺服器上未訂閱 → TierGateError('subscription_required')。 */
+export async function requireSubscription(): Promise<void> {
+  if (!billingApplies()) return;
+  const store = useSubscriptionStore.getState();
+  if (!store.hydrated) await store.refresh();
+  const s = useSubscriptionStore.getState();
+  // ponytail: 斷網問不到權威答案（hydrated 仍 false）時放行，不讓付費用戶冷啟動被誤擋；
+  // 這是 client 端 gate，伺服器端只擋裝置數。要硬擋得在 MQTT token 簽發時查訂閱。
+  if (!s.hydrated || s.status.isPro) return;
+  throw new TierGateError('subscription_required', { tier: s.status.tier });
+}
+
 // ============================================
 // 單檔大小 gate（>2GB stream-to-disk，2026-07 決策）
-//   - web/PWA：任何 tier 都 2GB（Chromium IDB 單 Blob 硬邊界；PWA 定位=試用入口）
-//   - native（Electron / iOS / Android AegisFileStream）：free 2GB、Pro 無上限
+//   - web/PWA：一律 2GB（Chromium IDB 單 Blob 硬邊界）
+//   - native（Electron / iOS / Android AegisFileStream）：不限（官方伺服器要有訂閱）
 //   - 發送 >2GB 需要「源檔原生路徑」（重啟後續服 FILE_REQUEST）→ 僅桌面；
 //     行動端檔案選擇器拿不到路徑 → 行動端只能「接收」>2GB
 // ============================================
 
-/** IDB 單 Blob 硬邊界 = web 與 free 的單檔上限。 */
+/** IDB 單 Blob 硬邊界 = web 的單檔上限。 */
 export const SINGLE_FILE_IDB_MAX = 2 * 1024 * 1024 * 1024;
 
 /** 本平台是否支援接收 >2GB（Electron / 有 AegisFileStream plugin 的 iOS/Android）。 */
@@ -70,30 +90,15 @@ export function isFsSendPlatform(): boolean {
   return !!getNativeFileStream()?.getPathForFile;
 }
 
-/** 目前使用者在此平台的單檔上限（bytes）。 */
-export function maxSingleFileBytes(): number {
-  if (!isFsStreamPlatform()) return SINGLE_FILE_IDB_MAX;
-  const tier = useSubscriptionStore.getState().status.tier;
-  return tier === 'free' ? SINGLE_FILE_IDB_MAX : Number.MAX_SAFE_INTEGER;
-}
-
-/** 單檔大小檢查：free 在 fs-capable 平台超標 → TierGateError（UI 開 paywall）；
- *  平台能力不足（web；或行動端試圖「發送」>2GB）→ 回 'platform_limit' 讓 UI 顯示
- *  「請用 App / 請從桌面發送」提示。
- *  async：冷啟動 store 未 hydrate 時 tier 預設 free，會把 Pro 誤擋 → 比照
- *  checkUploadQuota 先 await refresh。 */
+/** 單檔大小檢查：平台能力不足（web；或行動端試圖「發送」>2GB）→ 回 'platform_limit' 讓 UI
+ *  顯示「請用 App / 請從桌面發送」提示；>2GB 在官方伺服器未訂閱 → subscription_required。 */
 export async function checkSingleFileSize(
   size: number,
   direction: 'send' | 'receive' = 'send',
 ): Promise<'ok' | 'platform_limit'> {
   if (size <= SINGLE_FILE_IDB_MAX) return 'ok';
   if (direction === 'send' ? !isFsSendPlatform() : !isFsStreamPlatform()) return 'platform_limit';
-  const store = useSubscriptionStore.getState();
-  if (!store.hydrated) await store.refresh();
-  const tier = useSubscriptionStore.getState().status.tier;
-  if (tier === 'free') {
-    throw new TierGateError('single_file_too_large', { size, limit: SINGLE_FILE_IDB_MAX, tier });
-  }
+  await requireSubscription();
   return 'ok';
 }
 
@@ -101,10 +106,10 @@ export function getTierDeviceLimit(tier: Tier): number {
   return tier === 'free' ? 2 : 10;
 }
 
-/** Phase B：螢幕「發送」（投放 cast + 延伸 extend）需 Pro。接收免費、不 gate。
+/** 螢幕「發送」（投放 cast + 延伸 extend）要訂閱；接收不 gate。
  *  桌面 + 行動共用此判定。回 false → caller 開 UpgradePage，不執行 capture。 */
 export function isScreenSendAllowed(): boolean {
-  return useSubscriptionStore.getState().status.tier !== 'free';
+  return !billingApplies() || useSubscriptionStore.getState().status.isPro;
 }
 
 /** 上傳前檢查：本機已用 + 即將寫入的檔案大小 > effectiveQuota → 擋。

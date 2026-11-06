@@ -80,7 +80,8 @@ public class IapPlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             do {
                 let products = try await Product.products(for: Set(ids))
-                let out: [[String: Any]] = products.map { p in
+                var out: [[String: Any]] = []
+                for p in products {
                     var item: [String: Any] = [
                         "id": p.id,
                         "displayName": p.displayName,
@@ -92,8 +93,14 @@ public class IapPlugin: CAPPlugin, CAPBridgedPlugin {
                     ]
                     if let sub = p.subscription {
                         item["subscriptionPeriod"] = Self.periodString(sub.subscriptionPeriod)
+                        // 免費試用：只在這個 Apple ID 還有資格時回傳（同訂閱群組一人一次）。
+                        // 購買時 StoreKit 會自動套用，這裡只是讓 App 在試用開始前顯示天數（審核 3.1.1 要求）。
+                        if let intro = sub.introductoryOffer, intro.paymentMode == .freeTrial,
+                           await sub.isEligibleForIntroOffer {
+                            item["freeTrialDays"] = Self.periodDays(intro.period) * max(1, intro.periodCount)
+                        }
                     }
-                    return item
+                    out.append(item)
                 }
                 call.resolve(["products": out])
             } catch {
@@ -212,5 +219,16 @@ public class IapPlugin: CAPPlugin, CAPBridgedPlugin {
         @unknown default: unit = "unknown"
         }
         return "\(p.value)_\(unit)"
+    }
+
+    /// ponytail: 月、年用 30／365 天近似，只拿來顯示試用天數。
+    private static func periodDays(_ p: Product.SubscriptionPeriod) -> Int {
+        switch p.unit {
+        case .day: return p.value
+        case .week: return p.value * 7
+        case .month: return p.value * 30
+        case .year: return p.value * 365
+        @unknown default: return 0
+        }
     }
 }

@@ -21,7 +21,8 @@ import type { useAuth } from '../hooks/useAuth';
 import { getPublicKeyBase64Sync } from '../services/identity';
 import { formatBytes } from '../services/storageEstimate';
 import { getOutboxStats } from '../services/p2pSend';
-import { useSubscriptionStore, FREE_TIER_QUOTA_BYTES } from '../stores/subscriptionStore';
+import { useSubscriptionStore } from '../stores/subscriptionStore';
+import { billingApplies } from '../services/tierGate';
 import { ServerSettings } from '../components/Settings/ServerSettings';
 import { getActiveServer } from '../services/serverChoice';
 
@@ -485,18 +486,12 @@ function SubscriptionSection({ onShowUpgrade }: SubscriptionSectionProps) {
   }, [refresh, refreshUsage]);
 
   const usagePct = effectiveQuota > 0 ? Math.min(100, (usage.bytes / effectiveQuota) * 100) : 0;
-  const isFreeAtCap = !status.isPro && usage.bytes >= FREE_TIER_QUOTA_BYTES;
 
   // 進度條顏色：>=90% 紅、>=70% 黃、其他 mist 主題色
   const barColor =
     usagePct >= 90 ? 'bg-red-500' :
     usagePct >= 70 ? 'bg-amber-500' :
     'bg-mist-500';
-
-  // quota 來源說明：免費版固定 2GB cap；Pro 受裝置實際空間
-  const quotaSourceKey: AegisStringKey = status.isPro
-    ? 'subscription.quotaSourceDevice'
-    : 'subscription.quotaSourceFree';
 
   return (
     <div className="p-4 border-b border-[var(--surface-border)]" data-testid="subscription-section">
@@ -536,7 +531,7 @@ function SubscriptionSection({ onShowUpgrade }: SubscriptionSectionProps) {
             />
           </div>
           <div className="text-xs text-on-surface-tertiary mt-1.5">
-            {aegisT(language, quotaSourceKey)}
+            {aegisT(language, 'subscription.quotaSourceDevice')}
           </div>
         </div>
 
@@ -548,17 +543,13 @@ function SubscriptionSection({ onShowUpgrade }: SubscriptionSectionProps) {
           </span>
         </div>
 
-        {!status.isPro && (
+        {!status.isPro && billingApplies() && (
           <button
             onClick={() => onShowUpgrade?.()}
-            className={`w-full px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              isFreeAtCap
-                ? 'bg-red-500 hover:bg-red-400 text-white'
-                : 'bg-mist-500 hover:bg-mist-400 text-navy-900'
-            }`}
+            className="w-full px-3 py-2 rounded-md text-sm font-medium transition-colors bg-mist-500 hover:bg-mist-400 text-navy-900"
             data-testid="settings-upgrade-btn"
           >
-            {aegisT(language, isFreeAtCap ? 'subscription.upgradeNow' : 'subscription.upgrade')}
+            {aegisT(language, 'subscription.upgrade')}
           </button>
         )}
 

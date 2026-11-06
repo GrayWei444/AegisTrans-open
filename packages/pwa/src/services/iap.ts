@@ -39,6 +39,8 @@ export interface IapProduct {
   currencyCode: string;
   type: string;
   subscriptionPeriod?: string;
+  /** 有值 = 這個商店帳號還有免費試用資格（原生端已判斷），購買時商店自動套用。 */
+  freeTrialDays?: number;
 }
 interface PurchaseResult {
   status: 'purchased' | 'cancelled' | 'pending' | 'unknown';

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Subscription model for the official server: there is no free tier any more. New users start a 14-day free trial of the monthly or yearly plan through the App Store or Google Play (the store decides eligibility, once per store account); after that, sending files, text and screens through the official server needs a subscription or the lifetime purchase. Files you already received stay available.
+- Self-hosted servers are not restricted by subscription (Settings → Server, or a build with `VITE_DEFAULT_API_URL`).
+- The plans screen shows the trial length, what stops when the trial ends and the price after it. Android now picks the free-trial offer explicitly instead of the first offer Google Play returns.
+- Fixed: on a newly added device, downloading a received file could stay at "Receiving 0%" for a minute and then fail when the device had no group key of its own yet. Deleting a message had the same silent failure.
+
 ## 1.0.7 — 2026-11-04
 
 - Official builds now ship the reproducible build of `packages/crypto-core` (see `BUILD_PROVENANCE.md`). Earlier official builds used an older prebuilt binary that still logged fragments of key material to the console.

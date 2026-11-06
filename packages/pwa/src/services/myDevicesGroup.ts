@@ -40,6 +40,13 @@ if (DEBUG_TOOLS && typeof window !== 'undefined') {
     const key = await groupKeyService.getActiveGroupKey(myDevicesGroupId(userId));
     return key ? { keyId: key.keyId, createdAt: key.createdAt, isActive: key.isActive } : null;
   };
+  // 把本機所有 my-devices key 變成「只能解密、不 active」= 新裝置只有回應 group_key_request 補來的 key
+  // 的真實狀態（groupKey.ts LOW-1）。E2E file-types 用它穩定重現「收檔請求沒有 active key」。
+  // @ts-expect-error
+  window.__aegisDebug.makeGroupKeysDecryptOnly = async (userId: string) => {
+    const { run } = await import('./database');
+    await run('UPDATE group_keys SET is_active = 0, decrypt_only = 1 WHERE group_id = ?', [myDevicesGroupId(userId)]);
+  };
 }
 
 /** Encrypt 函式型別（從 useCrypto 注入；避免循環依賴 React hook） */

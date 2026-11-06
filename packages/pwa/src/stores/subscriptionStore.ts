@@ -18,23 +18,20 @@ import {
   FREE_TIER_STATUS,
 } from '../services/subscription';
 import { getAegisTransUsage, type AegisTransUsage, getStorageStatus } from '../services/storageEstimate';
-import type { TierGateReason, QuotaDetails, DeviceLimitDetails, SingleFileDetails } from '../services/tierGate';
+import type { TierGateReason, TierGateDetails } from '../services/tierGate';
 
-// 免費版 hard cap（與 LemonSqueezy 月訂同一定價）
-export const FREE_TIER_QUOTA_BYTES = 2 * 1024 * 1024 * 1024;  // 2 GB
+// ponytail: 第一次 refresh 拿到裝置真實 quota 之前的占位值（2026-11-06 起沒有免費版 2GB 上限）
+const INITIAL_QUOTA_BYTES = 2 * 1024 * 1024 * 1024;
 
 export interface PaywallContext {
   reason: TierGateReason;
-  details: QuotaDetails | DeviceLimitDetails | SingleFileDetails;
+  details: TierGateDetails;
 }
 
 interface SubscriptionState {
   status: SubscriptionStatus;
   usage: AegisTransUsage;
-  /** 裝置可用的 effective quota（bytes）：
-   *   - free: min(2GB, deviceQuota)
-   *   - pro:  deviceQuota（即 navigator.storage.estimate quota）
-   */
+  /** 裝置可用的 quota（bytes，即 navigator.storage.estimate quota）。 */
   effectiveQuota: number;
   /** 是否已從 server 拉過至少一次 status（避免 SSR-style 閃爍） */
   hydrated: boolean;
@@ -57,9 +54,8 @@ interface SubscriptionState {
   reset: () => void;
 }
 
-async function recomputeEffectiveQuota(isPro: boolean): Promise<number> {
-  const dev = await getStorageStatus();
-  return isPro ? dev.quota : Math.min(FREE_TIER_QUOTA_BYTES, dev.quota);
+async function recomputeEffectiveQuota(): Promise<number> {
+  return (await getStorageStatus()).quota;
 }
 
 // review P2：session generation — 每次 reset（登出/換帳號）+1。refresh 開始時捕捉當下 gen + user，
@@ -69,7 +65,7 @@ let sessionGeneration = 0;
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   status: FREE_TIER_STATUS,   // 初始 Free；不從本機快取 hydrate（可偽造，已移除）
   usage: { bytes: 0, fileCount: 0 },
-  effectiveQuota: FREE_TIER_QUOTA_BYTES,
+  effectiveQuota: INITIAL_QUOTA_BYTES,
   hydrated: false,
   loading: false,
   error: null,
@@ -90,11 +86,11 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       // 且 **不設 hydrated=true**，讓 online 事件 / 下次 gate 再查（不再永遠卡斷網當下狀態）。
       if (fetched === null) {
         const status = get().status;
-        const effectiveQuota = await recomputeEffectiveQuota(status.isPro);
+        const effectiveQuota = await recomputeEffectiveQuota();
         set({ status, usage, effectiveQuota, loading: false });
         return;
       }
-      const effectiveQuota = await recomputeEffectiveQuota(fetched.isPro);
+      const effectiveQuota = await recomputeEffectiveQuota();
       set({ status: fetched, usage, effectiveQuota, hydrated: true, loading: false });
     } catch (e) {
       if (gen !== sessionGeneration) return;
@@ -108,7 +104,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
 
   setStatus: async (status: SubscriptionStatus) => {
-    const effectiveQuota = await recomputeEffectiveQuota(status.isPro);
+    const effectiveQuota = await recomputeEffectiveQuota();
     // 升級成功 → 自動關閉 paywall
     set({
       status,
@@ -126,7 +122,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     set({
       status: FREE_TIER_STATUS,
       usage: { bytes: 0, fileCount: 0 },
-      effectiveQuota: FREE_TIER_QUOTA_BYTES,
+      effectiveQuota: INITIAL_QUOTA_BYTES,
       hydrated: false,
       loading: false,
       error: null,

@@ -54,7 +54,7 @@ import { screenShareService } from './services/screenShare';
 import { nativeScreenSenderService } from './services/nativeScreenSender';
 import { AegisDisplay } from '@aegisrd/capacitor-aegisdisplay';
 import { UpgradePage } from './pages/UpgradePage';
-import { isScreenSendAllowed } from './services/tierGate';
+import { isScreenSendAllowed, billingApplies } from './services/tierGate';
 import { setStatusBar } from './services/capacitor';
 import { DeviceLimitGate } from './components/DeviceLimitGate';
 
@@ -677,6 +677,17 @@ function AppShell() {
       useSubscriptionStore.getState().reset();
     }
   }, [auth.user, auth.jwt]);
+
+  // 沒有免費版（2026-11-06）：登入後確認未訂閱 → 每次登入主動開一次方案頁（可關，關了仍能看已收的檔案）。
+  const subHydrated = useSubscriptionStore((s) => s.hydrated);
+  const subIsPro = useSubscriptionStore((s) => s.status.isPro);
+  const upgradePromptedRef = useRef(false);
+  useEffect(() => {
+    if (!auth.user) { upgradePromptedRef.current = false; return; }
+    if (!subHydrated || subIsPro || upgradePromptedRef.current || !billingApplies()) return;
+    upgradePromptedRef.current = true;
+    setShowUpgrade(true);
+  }, [auth.user, subHydrated, subIsPro]);
 
   // CR-05：登入後啟動 StoreKit Transaction.updates 監聽（iOS 才有作用，其它平台 no-op）。
   //   背景續訂 / 退款 / 跨裝置購買 → 後端 re-verify 成功才 finish + 更新訂閱狀態。

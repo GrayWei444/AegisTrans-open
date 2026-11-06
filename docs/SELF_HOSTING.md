@@ -129,8 +129,11 @@ reverse proxy path instead of cross-origin.
 
 ## Limits that apply on any server
 
+- Subscriptions only gate the official server. When the app is pointed at your own
+  server (Settings → server, or a build with `VITE_DEFAULT_API_URL`), sending files,
+  text and screens is not restricted by subscription.
 - Accounts get the device limits of their subscription tier as coded in
-  `api/aegistrans_routes.py` (free: 2 devices, paid tiers: 10, absolute cap 16).
+  `api/aegistrans_routes.py` (no subscription: 2 devices, paid tiers: 10, absolute cap 16).
   In-app purchase verification is disabled until the `AEGISTRANS_IAP_*` /
   `AEGISTRANS_GOOGLE_*` settings are filled in. Tiers are stored in the
   `aegistrans_licenses` / entitlement tables of the SQLite database.

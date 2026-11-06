@@ -18,7 +18,7 @@ import * as groupKeyService from './groupKey';
 import { myDevicesGroupId } from './myDevicesGroup';
 import { buildEncryptedEnvelopeOrGenerate, ENVELOPE_PROTOCOL_VERSION } from './groupKeyEnvelope';
 import { createSHA256, type IHasher } from 'hash-wasm';
-import { checkUploadQuota, checkSingleFileSize } from './tierGate';
+import { checkUploadQuota, checkSingleFileSize, requireSubscription } from './tierGate';
 import { getNativeFileStream } from './nativeFileStream';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { devLog } from '../utils/devLog';
@@ -301,6 +301,7 @@ export async function sendFile(file: File, caption?: string): Promise<Message> {
   // >2GB：只有 native fs streaming 可收送（IDB 單 Blob ~2GB 硬邊界）。tier gate：
   // free 超標 → throw TierGateError（UI 開 paywall）；web 平台 → 人話「太大」。
   // 另必須拿得到原生路徑（重啟後才能繼續服務接收端的 FILE_REQUEST — pull model 可能隔好幾天）。
+  await requireSubscription();
   const sizeCheck = await checkSingleFileSize(file.size);
   const useFsStorage = file.size > MAX_FILE_SIZE;
   let srcPath: string | undefined;
@@ -321,7 +322,7 @@ export async function sendFile(file: File, caption?: string): Promise<Message> {
     }
     srcPath = prep.path;
   }
-  // Tier gate（1A.7）：免費版 2GB、Pro 不限。撞牆 → throw TierGateError → UI 開 paywall。
+  // 本機空間：放不下 → throw TierGateError('storage_quota_exceeded') → UI 開提示。
   await checkUploadQuota(file.size);
 
   if (!currentUserId || !currentDeviceId) {

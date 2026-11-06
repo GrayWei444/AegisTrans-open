@@ -187,22 +187,26 @@ const STRINGS = {
   // ===== Phase 1A: Subscription / Paywall / Upgrade =====
   // Paywall modal
   'paywall.quotaTitle':    { 'zh-TW': '本機儲存空間已滿', 'zh-CN': '本机存储空间已满', en: 'Local storage full', ja: 'ローカル容量がいっぱいです', ko: '로컬 저장공간 가득 참' },
-  'paywall.quotaBody':     { 'zh-TW': '已用 {used} / {quota}（免費版）。\n\n要傳送的檔案需 {needed}，無法塞進剩餘空間。\n\n升級 Pro 解除限制，或先清空一些舊檔。', 'zh-CN': '已用 {used} / {quota}（免费版）。\n\n要传送的文件需 {needed}，无法塞进剩余空间。\n\n升级 Pro 解除限制，或先清空一些旧文件。', en: 'Using {used} of {quota} (Free tier).\n\nThis file needs {needed} but won\'t fit.\n\nUpgrade to Pro for unlimited storage, or clear old files first.', ja: '{used} / {quota} 使用中（無料版）。\n\nこのファイルは {needed} 必要ですが、残り容量に収まりません。\n\nProにアップグレードするか、古いファイルを削除してください。', ko: '{used} / {quota} 사용 중 (무료).\n\n이 파일은 {needed} 필요하지만 공간이 부족합니다.\n\nPro로 업그레이드하거나 오래된 파일을 삭제하세요.' },
-  'paywall.fileTitle':     { 'zh-TW': '單檔超過 2GB 需要 Pro', 'zh-CN': '单文件超过 2GB 需要 Pro', en: 'Files over 2GB need Pro', ja: '2GB超のファイルはPro限定', ko: '2GB 초과 파일은 Pro 필요' },
-  'paywall.fileBody':      { 'zh-TW': '這個檔案 {size}，免費版單檔上限 {limit}。\n\n升級 Pro 即可用 App 收發不限大小的單一檔案（發送限桌面 App）。', 'zh-CN': '这个文件 {size}，免费版单文件上限 {limit}。\n\n升级 Pro 即可用 App 收发不限大小的单一文件（发送限桌面 App）。', en: 'This file is {size}; the free tier caps single files at {limit}.\n\nUpgrade to Pro to transfer files of any size in the app (sending requires the desktop app).', ja: 'このファイルは {size} で、無料版の1ファイル上限は {limit} です。\n\nProにアップグレードすると、アプリでサイズ無制限のファイルを受信できます（送信はデスクトップアプリのみ）。', ko: '이 파일은 {size}이며 무료 버전의 단일 파일 한도는 {limit}입니다.\n\nPro로 업그레이드하면 앱에서 크기 제한 없는 파일을 주고받을 수 있습니다(전송은 데스크톱 앱 전용).' },
+  'paywall.quotaBody':     { 'zh-TW': '已用 {used} / {quota}。\n\n要傳送的檔案需 {needed}，裝置剩餘空間不夠。\n\n請先清掉一些舊檔再傳。', 'zh-CN': '已用 {used} / {quota}。\n\n要传送的文件需 {needed}，设备剩余空间不够。\n\n请先清掉一些旧文件再传。', en: 'Using {used} of {quota}.\n\nThis file needs {needed} but the device doesn\'t have enough space left.\n\nClear some old files first.', ja: '{used} / {quota} 使用中。\n\nこのファイルは {needed} 必要ですが、デバイスの空き容量が足りません。\n\n古いファイルを削除してから送信してください。', ko: '{used} / {quota} 사용 중.\n\n이 파일은 {needed} 필요하지만 기기 저장 공간이 부족합니다.\n\n오래된 파일을 먼저 삭제하세요.' },
+  'paywall.subTitle':      { 'zh-TW': '需要訂閱', 'zh-CN': '需要订阅', en: 'Subscription required', ja: 'サブスクリプションが必要です', ko: '구독이 필요합니다' },
+  'paywall.subBody':       { 'zh-TW': 'AegisTrans 要訂閱才能傳送檔案、文字和投放螢幕。\n\n新用戶可在 iPhone 或 Android App 免費試用 14 天，試用期間取消不收費。\n\n已收到的檔案仍可照常開啟。', 'zh-CN': 'AegisTrans 需要订阅才能传送文件、文字和投放屏幕。\n\n新用户可在 iPhone 或 Android App 免费试用 14 天，试用期间取消不收费。\n\n已收到的文件仍可照常打开。', en: 'AegisTrans needs a subscription to send files, text and screens.\n\nNew users get a 14-day free trial in the iPhone or Android app. Cancel during the trial and you won\'t be charged.\n\nFiles you already received stay available.', ja: 'ファイル・テキストの送信と画面のキャストにはサブスクリプションが必要です。\n\n新規ユーザーは iPhone / Android アプリで14日間無料でお試しいただけます。期間中に解約すれば料金はかかりません。\n\n受信済みのファイルは引き続き開けます。', ko: '파일·텍스트 전송과 화면 전송에는 구독이 필요합니다.\n\n신규 사용자는 iPhone 또는 Android 앱에서 14일간 무료로 체험할 수 있으며, 체험 기간 중 취소하면 요금이 청구되지 않습니다.\n\n이미 받은 파일은 계속 열 수 있습니다.' },
   'paywall.deviceTitle':   { 'zh-TW': '裝置數已達上限', 'zh-CN': '设备数已达上限', en: 'Device limit reached', ja: 'デバイス数上限に到達', ko: '기기 수 한도 초과' },
-  'paywall.deviceBody':    { 'zh-TW': '目前已連結 {count} 台裝置，免費版上限 {limit} 台。\n\n升級 Pro 可連結最多 10 台裝置，或移除不再使用的舊裝置。', 'zh-CN': '目前已连结 {count} 台设备，免费版上限 {limit} 台。\n\n升级 Pro 可连结最多 10 台设备，或移除不再使用的旧设备。', en: '{count} devices connected; free tier supports {limit}.\n\nUpgrade to Pro for up to 10 devices, or remove old devices.', ja: '{count} 台のデバイスが接続済み。無料版は {limit} 台までです。\n\nProなら最大10台、または古いデバイスを削除してください。', ko: '{count}대 기기 연결됨, 무료 한도는 {limit}대입니다.\n\nPro 업그레이드 시 최대 10대까지 가능합니다.' },
-  'paywall.upgradeBtn':    { 'zh-TW': '升級 Pro 解除限制', 'zh-CN': '升级 Pro 解除限制', en: 'Upgrade to Pro', ja: 'Proにアップグレード', ko: 'Pro로 업그레이드' },
+  'paywall.deviceBody':    { 'zh-TW': '目前已連結 {count} 台裝置，未訂閱帳號上限 {limit} 台。\n\n訂閱後可連結最多 10 台裝置，或移除不再使用的舊裝置。', 'zh-CN': '目前已连结 {count} 台设备，未订阅账号上限 {limit} 台。\n\n订阅后可连结最多 10 台设备，或移除不再使用的旧设备。', en: '{count} devices connected; accounts without a subscription support {limit}.\n\nSubscribe for up to 10 devices, or remove old devices.', ja: '{count} 台のデバイスが接続済み。未購読のアカウントは {limit} 台までです。\n\n購読すると最大10台まで接続できます。古いデバイスを削除することもできます。', ko: '{count}대 기기 연결됨, 구독하지 않은 계정은 {limit}대까지입니다.\n\n구독하면 최대 10대까지 연결할 수 있으며, 오래된 기기를 삭제할 수도 있습니다.' },
+  'paywall.upgradeBtn':    { 'zh-TW': '查看方案', 'zh-CN': '查看方案', en: 'See plans', ja: 'プランを見る', ko: '플랜 보기' },
   'paywall.manageDevicesBtn': { 'zh-TW': '管理我的裝置',  'zh-CN': '管理我的设备',  en: 'Manage devices',  ja: 'デバイスを管理',  ko: '기기 관리' },
   'paywall.cancel':        { 'zh-TW': '稍後再說',       'zh-CN': '稍后再说',       en: 'Maybe later',             ja: '後で',             ko: '나중에' },
   'paywall.close':         { 'zh-TW': '關閉',           'zh-CN': '关闭',           en: 'Close',                   ja: '閉じる',           ko: '닫기' },
 
   // Upgrade page
-  'upgrade.title':         { 'zh-TW': '升級 Pro',       'zh-CN': '升级 Pro',       en: 'Upgrade to Pro',          ja: 'Proにアップグレード', ko: 'Pro 업그레이드' },
+  'upgrade.title':         { 'zh-TW': '訂閱 AegisTrans', 'zh-CN': '订阅 AegisTrans', en: 'Subscribe to AegisTrans', ja: 'AegisTrans のサブスクリプション', ko: 'AegisTrans 구독' },
+  'upgrade.subRequired':   { 'zh-TW': '訂閱後可傳送檔案和文字、投放與延伸螢幕，最多 10 台裝置。', 'zh-CN': '订阅后可传送文件和文字、投放与扩展屏幕，最多 10 台设备。', en: 'A subscription lets you send files and text, cast and extend screens, on up to 10 devices.', ja: '購読すると、ファイルとテキストの送信、画面のキャストと拡張を最大10台のデバイスで利用できます。', ko: '구독하면 최대 10대 기기에서 파일·텍스트 전송, 화면 전송과 확장을 이용할 수 있습니다.' },
+  'upgrade.trialBadge':    { 'zh-TW': '免費試用 {days} 天', 'zh-CN': '免费试用 {days} 天', en: '{days}-day free trial', ja: '{days}日間無料', ko: '{days}일 무료 체험' },
+  'upgrade.trialThen':     { 'zh-TW': '之後 {price}', 'zh-CN': '之后 {price}', en: 'then {price}', ja: 'その後 {price}', ko: '이후 {price}' },
+  'upgrade.trialTerms':    { 'zh-TW': '新用戶可免費試用 {days} 天（每個 Apple ID 或 Google 帳號限一次）。試用期間可隨時到商店取消，不會收費；沒取消的話，試用結束時會依所選方案自動扣款並續訂。試用結束後若沒有訂閱，將無法再傳送檔案、文字和投放螢幕，已收到的檔案仍可開啟。', 'zh-CN': '新用户可免费试用 {days} 天（每个 Apple ID 或 Google 账号限一次）。试用期间可随时到商店取消，不会收费；没取消的话，试用结束时会按所选方案自动扣款并续订。试用结束后若没有订阅，将无法再传送文件、文字和投放屏幕，已收到的文件仍可打开。', en: 'New users get a {days}-day free trial (once per Apple ID or Google account). Cancel in the store any time during the trial and you won\'t be charged; otherwise the plan you chose is charged and renews automatically when the trial ends. Without a subscription after the trial, you can no longer send files, text or screens; files you already received stay available.', ja: '新規ユーザーは{days}日間無料でお試しいただけます（Apple ID / Google アカウントごとに1回）。期間中はいつでもストアで解約でき、料金はかかりません。解約しない場合、お試し期間終了時に選択したプランが課金され自動更新されます。お試し終了後に購読しない場合、ファイル・テキストの送信と画面のキャストはできなくなりますが、受信済みのファイルは引き続き開けます。', ko: '신규 사용자는 {days}일간 무료로 체험할 수 있습니다(Apple ID 또는 Google 계정당 1회). 체험 기간 중 언제든 스토어에서 취소하면 요금이 청구되지 않으며, 취소하지 않으면 체험 종료 시 선택한 요금제가 청구되고 자동 갱신됩니다. 체험 후 구독하지 않으면 파일·텍스트 전송과 화면 전송을 더 이상 할 수 없지만, 이미 받은 파일은 계속 열 수 있습니다.' },
   'upgrade.currentTier':   { 'zh-TW': '目前方案',       'zh-CN': '当前方案',       en: 'Current plan',            ja: '現在のプラン',     ko: '현재 플랜' },
   'upgrade.proBadge':      { 'zh-TW': 'Pro',            'zh-CN': 'Pro',            en: 'Pro',                     ja: 'Pro',              ko: 'Pro' },
   'upgrade.plansTitle':    { 'zh-TW': '選一個方案',     'zh-CN': '选一个方案',     en: 'Choose a plan',           ja: 'プランを選択',     ko: '플랜 선택' },
-  'upgrade.tier.free':     { 'zh-TW': '免費版',         'zh-CN': '免费版',         en: 'Free',                    ja: '無料',             ko: '무료' },
+  'upgrade.tier.free':     { 'zh-TW': '未訂閱',         'zh-CN': '未订阅',         en: 'Not subscribed',          ja: '未購読',           ko: '미구독' },
   'upgrade.tier.monthly':  { 'zh-TW': '月訂',           'zh-CN': '月订',           en: 'Monthly',                 ja: '月額',             ko: '월간' },
   'upgrade.tier.yearly':   { 'zh-TW': '年訂',           'zh-CN': '年订',           en: 'Yearly',                  ja: '年額',             ko: '연간' },
   'upgrade.tier.lifetime': { 'zh-TW': '賣斷',           'zh-CN': '买断',           en: 'Lifetime',                ja: '買い切り',         ko: '평생' },
@@ -231,8 +235,8 @@ const STRINGS = {
   'upgrade.legalAgreement': { 'zh-TW': '購買即表示你同意服務條款與隱私政策。', 'zh-CN': '购买即表示你同意服务条款与隐私政策。', en: 'By purchasing, you agree to the Terms of Service and Privacy Policy.', ja: '購入により、利用規約とプライバシーポリシーに同意したものとみなされます。', ko: '구매하면 서비스 약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.' },
 
   // App-only checkout（PWA 引導下載 native app 內購）
-  'upgrade.appOnlyTitle':    { 'zh-TW': '透過 App 升級',         'zh-CN': '通过 App 升级',         en: 'Upgrade via App',                 ja: 'Appからアップグレード', ko: 'App에서 업그레이드' },
-  'upgrade.appOnlyDesc':     { 'zh-TW': '升級後 PWA 與 App 自動同步解鎖', 'zh-CN': '升级后 PWA 与 App 自动同步解锁', en: 'PWA and app sync after upgrade', ja: 'アップグレード後PWAとAppで同期', ko: '업그레이드 후 PWA와 App 자동 동기화' },
+  'upgrade.appOnlyTitle':    { 'zh-TW': '在手機 App 訂閱或免費試用', 'zh-CN': '在手机 App 订阅或免费试用', en: 'Subscribe or start a free trial in the mobile app', ja: 'モバイルアプリで購読・無料トライアル', ko: '모바일 앱에서 구독 또는 무료 체험' },
+  'upgrade.appOnlyDesc':     { 'zh-TW': '訂閱後所有裝置自動解鎖', 'zh-CN': '订阅后所有设备自动解锁', en: 'Unlocks on all your devices', ja: 'すべてのデバイスで有効になります', ko: '모든 기기에서 자동으로 적용됩니다' },
   'upgrade.openAppStore':    { 'zh-TW': 'App Store',              'zh-CN': 'App Store',              en: 'App Store',                       ja: 'App Store',           ko: 'App Store' },
   'upgrade.openPlayStore':   { 'zh-TW': 'Google Play',            'zh-CN': 'Google Play',            en: 'Google Play',                     ja: 'Google Play',         ko: 'Google Play' },
   'upgrade.scanQrPrompt':    { 'zh-TW': '掃描 QR 下載',           'zh-CN': '扫描 QR 下载',           en: 'Scan QR to download',             ja: 'QRをスキャン',        ko: 'QR 스캔하여 다운로드' },
@@ -251,12 +255,9 @@ const STRINGS = {
   'subscription.title':       { 'zh-TW': '訂閱方案',       'zh-CN': '订阅方案',       en: 'Subscription',           ja: 'サブスクリプション', ko: '구독' },
   'subscription.currentPlan': { 'zh-TW': '目前方案',       'zh-CN': '当前方案',       en: 'Current plan',           ja: '現在のプラン',     ko: '현재 플랜' },
   'subscription.usageLabel':  { 'zh-TW': '已用空間',       'zh-CN': '已用空间',       en: 'Used',                   ja: '使用済み',         ko: '사용량' },
-  'subscription.upgrade':     { 'zh-TW': '升級 Pro',       'zh-CN': '升级 Pro',       en: 'Upgrade to Pro',         ja: 'Proにアップグレード', ko: 'Pro 업그레이드' },
-  'subscription.upgradeNow':  { 'zh-TW': '⚠ 已達上限，立即升級', 'zh-CN': '⚠ 已达上限，立即升级', en: '⚠ At limit — upgrade now', ja: '⚠ 上限到達 — 今すぐアップグレード', ko: '⚠ 한도 도달 — 지금 업그레이드' },
+  'subscription.upgrade':     { 'zh-TW': '查看方案',       'zh-CN': '查看方案',       en: 'See plans',              ja: 'プランを見る',     ko: '플랜 보기' },
   'subscription.manageApple': { 'zh-TW': '管理 Apple 訂閱', 'zh-CN': '管理 Apple 订阅', en: 'Manage Apple subscription', ja: 'Appleサブスクリプションを管理', ko: 'Apple 구독 관리' },
   'subscription.manageGoogle':{ 'zh-TW': '管理 Google Play 訂閱', 'zh-CN': '管理 Google Play 订阅', en: 'Manage Google Play subscription', ja: 'Google Playサブスクリプションを管理', ko: 'Google Play 구독 관리' },
-  // quota source 說明（讓使用者知道為什麼是 2GB 而不是裝置實際空間）
-  'subscription.quotaSourceFree':   { 'zh-TW': '免費版上限',     'zh-CN': '免费版上限',     en: 'Free tier limit',         ja: '無料版の上限',     ko: '무료 한도' },
   'subscription.quotaSourceDevice': { 'zh-TW': '受裝置可用空間', 'zh-CN': '受设备可用空间', en: 'Device available space',  ja: 'デバイスの空き容量', ko: '기기 가용 공간' },
 
   // ===== Auth / 登入畫面（EmailAuthScreen）=====
