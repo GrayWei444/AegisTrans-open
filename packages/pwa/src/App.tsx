@@ -54,7 +54,8 @@ import { screenShareService } from './services/screenShare';
 import { nativeScreenSenderService } from './services/nativeScreenSender';
 import { AegisDisplay } from '@aegisrd/capacitor-aegisdisplay';
 import { UpgradePage } from './pages/UpgradePage';
-import { isScreenSendAllowed, billingApplies } from './services/tierGate';
+import { isScreenSendAllowed } from './services/tierGate';
+import { TrialOfferCard, TrialEndingNotice, useSubscriptionAttention } from './components/SubscriptionNudge';
 import { setStatusBar } from './services/capacitor';
 import { DeviceLimitGate } from './components/DeviceLimitGate';
 
@@ -678,16 +679,9 @@ function AppShell() {
     }
   }, [auth.user, auth.jwt]);
 
-  // 沒有免費版（2026-11-06）：登入後確認未訂閱 → 每次登入主動開一次方案頁（可關，關了仍能看已收的檔案）。
-  const subHydrated = useSubscriptionStore((s) => s.hydrated);
-  const subIsPro = useSubscriptionStore((s) => s.status.isPro);
-  const upgradePromptedRef = useRef(false);
-  useEffect(() => {
-    if (!auth.user) { upgradePromptedRef.current = false; return; }
-    if (!subHydrated || subIsPro || upgradePromptedRef.current || !billingApplies()) return;
-    upgradePromptedRef.current = true;
-    setShowUpgrade(true);
-  }, [auth.user, subHydrated, subIsPro]);
+  // 訂閱提示（2026-11-06 Gray）：登入後不跳方案頁；未訂閱跳「開始免費試用」卡片、快到期提醒、「設定」小紅點
+  //（見 components/SubscriptionNudge.tsx）
+  const subscriptionAttention = useSubscriptionAttention();
 
   // CR-05：登入後啟動 StoreKit Transaction.updates 監聽（iOS 才有作用，其它平台 no-op）。
   //   背景續訂 / 退款 / 跨裝置購買 → 後端 re-verify 成功才 finish + 更新訂閱狀態。
@@ -902,8 +896,11 @@ function AppShell() {
           <button
             onClick={() => setShowSettings((s) => !s)}
             data-testid="header-settings-toggle"
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--surface-border)] hover:bg-surface-tertiary text-sm"
+            className="relative hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--surface-border)] hover:bg-surface-tertiary text-sm"
           >
+            {subscriptionAttention && !showSettings && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500" data-testid="settings-attention-dot" aria-hidden="true" />
+            )}
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -1011,7 +1008,7 @@ function AppShell() {
               </div>
             )}
           </div>
-          <BottomNav active={mobileTab} onChange={setMobileTab} />
+          <BottomNav active={mobileTab} onChange={setMobileTab} settingsBadge={subscriptionAttention} />
         </>
       )}
 
@@ -1026,6 +1023,9 @@ function AppShell() {
           screenShareService.onIncomingOffer。收到 SDP offer → 跳 accept/reject 對話框；
           accept 後 stream 抵達 → 全螢幕 video。任何裝置都可當 receiver。 */}
       <RemoteScreenViewer devices={auth.devices} />
+
+      <TrialOfferCard key={auth.user.id} onShowPlans={() => setShowUpgrade(true)} onSignOut={auth.signOut} />
+      <TrialEndingNotice onShowPlans={() => setShowUpgrade(true)} />
 
       {/* Paywall：撞牆觸發；升級點 = 開 UpgradePage；管理裝置點 = 切到 settings tab */}
       <PaywallModal

@@ -497,7 +497,7 @@ async function registerDevice(jwt: string, pubkey?: string | null): Promise<Regi
             ok: false,
             reason: 'device_limit_exceeded',
             tier: String(detail.tier ?? 'free'),
-            tierLimit: Number(detail.tier_limit ?? 2),
+            tierLimit: Number(detail.tier_limit ?? 10),
             deviceCount: Number(detail.device_count ?? 0),
             devices: Array.isArray(detail.devices) ? detail.devices : [],
             currentDeviceId: typeof detail.current_device_id === 'string' ? detail.current_device_id : null,

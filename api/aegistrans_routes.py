@@ -734,6 +734,13 @@ class SubscriptionStatusResponse(BaseModel):
     source: Optional[str] = None       # 'lemonsqueezy' | 'apple' | 'google' | 'dev' | None
     expires_at: Optional[int] = None   # unix sec; None → free or lifetime
     redundant_subscriptions: list[RedundantSubscription] = []
+    # 2026-11-06：首頁「試用剩 N 天」提醒用。is_trial＝這一期是商店免費試用；will_renew＝到期會自動續訂
+    #（None＝不適用：未訂閱或永久版）
+    is_trial: bool = False
+    will_renew: Optional[bool] = None
+    # 以前有沒有過商店購買（含已過期／退款；dev 測試列不算）：未訂閱時分「新用戶（可關的試用卡）」
+    # 與「試用／訂閱已到期（關不掉的訂閱卡）」—— Gray 2026-11-06
+    had_subscription: bool = False
 
 
 class DevSetTierBody(BaseModel):
@@ -1107,7 +1114,7 @@ def create_aegistrans_router() -> APIRouter:
         Dedupe 策略（依序）：
           1. (user_id, fingerprint_hash, pubkey) — 同一個安裝（指紋＋公鑰都相同）
           2. (user_id, pubkey) — legacy fallback（指紋變了但 keypair 還在 localStorage）
-          3. 都沒命中 → 檢查 tier limit（free=2, pro=10）
+          3. 都沒命中 → 檢查裝置上限（一律 10 台；2026-11-06 起沒有免費版，未訂閱也要能登入才看得到試用）
              - 滿了 → 409 + 現有 device list（讓 client 顯示「替換裝置」gate）
              - 沒滿 → INSERT 新 row
         硬上限 16 台仍存在（防 abuse）。
@@ -1253,7 +1260,9 @@ def create_aegistrans_router() -> APIRouter:
                 exp = lic["expires_at"]
                 if lic["tier"] == "pro_lifetime" or (exp and exp > now):
                     tier = lic["tier"]
-            tier_limit = 2 if tier == "free" else 10
+            # 2026-11-06 Gray：沒有免費版之後，未訂閱本來就傳不了東西，再限 2 台只會擋住還沒開始試用、
+            # 或試用到期要回來訂閱的人登入 → 一律 10 台（tier 仍回給 client 顯示用）
+            tier_limit = 10
             HARD_CAP = 16
 
             existing_devices = conn.execute(
@@ -1668,7 +1677,21 @@ def _recompute_entitlement(conn, user_id: str) -> SubscriptionStatusResponse:
         )
     return SubscriptionStatusResponse(
         tier=best["tier"], is_pro=True, source=best["source"], expires_at=best["expires_at"],
+        is_trial=_looks_like_trial(best),
+        will_renew=None if best["expires_at"] is None else best["state"] == "active",
     )
+
+
+TRIAL_MAX_FIRST_PERIOD = 16 * 86400
+
+
+def _looks_like_trial(row) -> bool:
+    """這一期是不是商店免費試用：月訂／年訂、而且從第一次寫入到到期不超過 16 天（試用 14 天，月訂第一期 30 天）。
+    ponytail: 用第一期長度判斷，不解析商店的 offerType；沙盒時間加速，續訂後仍會判成試用（只影響沙盒）。
+    要精準就在 verify／通知時記下 Apple offerType、Google offerId。"""
+    if row["tier"] not in ("pro_monthly", "pro_yearly") or not row["expires_at"] or not row["created_at"]:
+        return False
+    return row["expires_at"] - row["created_at"] <= TRIAL_MAX_FIRST_PERIOD
 
 
 def _redundant_subscriptions(conn, user_id: str, ent: SubscriptionStatusResponse):
@@ -1744,6 +1767,9 @@ def create_aegistrans_subscription_router() -> APIRouter:
         # 並附上「仍在扣款的低階訂閱」提醒清單。
         with get_db() as conn:
             ent = _recompute_entitlement(conn, user_id)
+            ent.had_subscription = conn.execute(
+                "SELECT 1 FROM aegistrans_purchases WHERE user_id=? AND store != 'dev' LIMIT 1", (user_id,)
+            ).fetchone() is not None
             return _status_with_redundant(conn, user_id, ent)
 
     @sub.post("/dev-set-tier", response_model=SubscriptionStatusResponse)

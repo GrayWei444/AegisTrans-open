@@ -23,6 +23,7 @@ import { formatBytes } from '../services/storageEstimate';
 import { getOutboxStats } from '../services/p2pSend';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { billingApplies } from '../services/tierGate';
+import { useSubscriptionAttention } from '../components/SubscriptionNudge';
 import { ServerSettings } from '../components/Settings/ServerSettings';
 import { getActiveServer } from '../services/serverChoice';
 
@@ -467,6 +468,7 @@ interface SubscriptionSectionProps {
 function SubscriptionSection({ onShowUpgrade }: SubscriptionSectionProps) {
   const { language } = useLanguage();
   const status = useSubscriptionStore((s) => s.status);
+  const attention = useSubscriptionAttention();   // 試用／訂閱快到期 → 紅點＋紅框
   const usage = useSubscriptionStore((s) => s.usage);
   const effectiveQuota = useSubscriptionStore((s) => s.effectiveQuota);
   const refresh = useSubscriptionStore((s) => s.refresh);
@@ -495,11 +497,24 @@ function SubscriptionSection({ onShowUpgrade }: SubscriptionSectionProps) {
 
   return (
     <div className="p-4 border-b border-[var(--surface-border)]" data-testid="subscription-section">
-      <h2 className="text-base font-semibold text-on-surface-secondary mb-3">
+      <h2 className="text-base font-semibold text-on-surface-secondary mb-3 flex items-center gap-2">
         {aegisT(language, 'subscription.title')}
+        {attention && <span className="w-2.5 h-2.5 rounded-full bg-red-500" data-testid="subscription-attention-dot" aria-hidden="true" />}
       </h2>
 
-      <div className="bg-surface-tertiary rounded-lg px-3 py-3 space-y-3">
+      <div
+        className={`bg-surface-tertiary rounded-lg px-3 py-3 space-y-3 ${attention ? 'ring-2 ring-red-500/70' : ''}`}
+        data-testid={attention ? 'subscription-card-attention' : undefined}
+      >
+        {attention && (
+          <button
+            onClick={() => onShowUpgrade?.()}
+            className="w-full px-3 py-2 rounded-md text-sm font-medium bg-red-500 hover:bg-red-400 text-white"
+            data-testid="subscription-attention-btn"
+          >
+            {aegisT(language, status.isTrial ? 'notice.trialTitle' : 'notice.subTitle')} · {aegisT(language, 'notice.view')}
+          </button>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-sm text-on-surface-secondary">
             {aegisT(language, 'subscription.currentPlan')}

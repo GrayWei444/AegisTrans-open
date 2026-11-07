@@ -81,8 +81,9 @@ interface PlanOption {
 
 const PLANS: PlanOption[] = [
   { tier: 'pro_monthly',  priceNtd: 60,  priceUsd: 1.99,  expiresInSeconds: 30 * 86400 },
-  { tier: 'pro_yearly',   priceNtd: 600, priceUsd: 19.99, expiresInSeconds: 365 * 86400, badgeKey: 'upgrade.badgeYearly' },
-  { tier: 'pro_lifetime', priceNtd: 1400, priceUsd: 44.99, expiresInSeconds: null,         badgeKey: 'upgrade.badgeLifetime' },
+  // 台灣價跟 App Store 實際一致（2026-11-07 iPhone 沙盒：月 60／年 690／永久 1490）；網頁版只是資訊，商店付款畫面為準
+  { tier: 'pro_yearly',   priceNtd: 690, priceUsd: 19.99, expiresInSeconds: 365 * 86400, badgeKey: 'upgrade.badgeYearly' },
+  { tier: 'pro_lifetime', priceNtd: 1490, priceUsd: 44.99, expiresInSeconds: null,         badgeKey: 'upgrade.badgeLifetime' },
 ];
 
 // Schema B 重複購買防護：只露「比目前 tier 高階」的選項。訂閱中只開放終身

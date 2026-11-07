@@ -30,6 +30,12 @@ export interface SubscriptionStatus {
   source: string | null;        // 'lemonsqueezy' | 'apple' | 'google' | 'dev' | null
   expiresAt: number | null;     // unix sec
   redundantSubscriptions: RedundantSubscription[];
+  /** 這一期是商店免費試用（首頁「試用剩 N 天」提醒用） */
+  isTrial: boolean;
+  /** 到期會自動續訂；null＝不適用（未訂閱、永久版） */
+  willRenew: boolean | null;
+  /** 以前有過商店購買（含已過期）：未訂閱時 true＝試用／訂閱已到期（關不掉的訂閱卡），false＝新用戶 */
+  hadSubscription: boolean;
 }
 
 export const FREE_TIER_STATUS: SubscriptionStatus = {
@@ -38,6 +44,9 @@ export const FREE_TIER_STATUS: SubscriptionStatus = {
   source: null,
   expiresAt: null,
   redundantSubscriptions: [],
+  isTrial: false,
+  willRenew: null,
+  hadSubscription: false,
 };
 
 interface SessionShape {
@@ -75,6 +84,9 @@ interface RawStatus {
   is_pro: boolean;
   source?: string | null;
   expires_at?: number | null;
+  is_trial?: boolean;
+  will_renew?: boolean | null;
+  had_subscription?: boolean;
   redundant_subscriptions?: Array<{
     store: string; product_id?: string | null; tier: string; expires_at?: number | null;
   }>;
@@ -91,6 +103,9 @@ export function normalizeStatus(raw: RawStatus): SubscriptionStatus {
     isPro: !!raw.is_pro,
     source: raw.source ?? null,
     expiresAt: raw.expires_at ?? null,
+    isTrial: !!raw.is_trial,
+    willRenew: raw.will_renew ?? null,
+    hadSubscription: !!raw.had_subscription,
     redundantSubscriptions: (raw.redundant_subscriptions ?? [])
       .filter((r): r is typeof r & { store: 'apple' | 'google' } => r.store === 'apple' || r.store === 'google')
       .map((r) => ({

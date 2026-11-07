@@ -3,9 +3,9 @@
  *
  * 2026-11-06 Gray 改成「沒有免費版：商店免費試用 14 天 → 訂閱」：
  *   1. 官方伺服器：未訂閱（含試用到期）不能傳送檔案、文字、螢幕 → requireSubscription()
- *      已收到的檔案仍可開啟（不扣住使用者自己的資料）
+ *      試用／訂閱到期後 App 跳關不掉的訂閱卡（SubscriptionNudge.TrialOfferCard，Gray 11-06）
  *   2. 自架伺服器（設定裡換伺服器、或 VITE_DEFAULT_API_URL build）不收費 —— 賣的是官方服務
- *   3. 裝置數量：未訂閱 2 台 / Pro 10 台（後端寫死，hard cap 16）
+ *   3. 裝置數量：一律 10 台（後端寫死，hard cap 16；未訂閱也要能登入才看得到試用）
  *
  * 使用：sendFile 進入點先 await checkUploadQuota(file.size)；
  * 撞牆 → throw TierGateError → ChatInput / Settings 顯示 paywall modal。
@@ -102,8 +102,8 @@ export async function checkSingleFileSize(
   return 'ok';
 }
 
-export function getTierDeviceLimit(tier: Tier): number {
-  return tier === 'free' ? 2 : 10;
+export function getTierDeviceLimit(_tier: Tier): number {
+  return 10;
 }
 
 /** 螢幕「發送」（投放 cast + 延伸 extend）要訂閱；接收不 gate。

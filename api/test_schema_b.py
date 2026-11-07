@@ -112,6 +112,51 @@ class SchemaBTest(unittest.TestCase):
             "lineItems": [{"productId": self.MONTHLY, "expiryTime": self.google_expiry}],
         }
 
+    def test_device_limit_is_10_without_subscription(self):
+        # 2026-11-06：沒有免費版 → 未訂閱也要能登入到 10 台（以前第 3 台就 409），第 11 台才擋
+        h = {"Authorization": f"Bearer {self.jwt}"}
+        def register(i):
+            return self.client.post("/aegistrans/auth/devices/register", headers=h,
+                                    json={"label": f"d{i}", "pubkey": f"PKLIMIT{i:02d}".ljust(43, "A") + "="})
+        for i in range(10):
+            r = register(i)
+            self.assertEqual(r.status_code, 200, (i, r.text))
+        r = register(10)
+        self.assertEqual(r.status_code, 409, r.text)
+        self.assertEqual(r.json()["detail"]["tier_limit"], 10)
+        self.assertEqual(r.json()["detail"]["tier"], "free")
+
+    def test_status_reports_trial_and_renewal(self):
+        # 2026-11-06：首頁提醒要知道「是不是試用、會不會續訂」
+        self._insert_apple_purchase("pro_monthly", self.now + 14 * 86400, external_id="apple-trial")
+        st = self._status().json()
+        self.assertTrue(st["is_trial"])
+        self.assertTrue(st["will_renew"])
+        with routes.get_db() as conn:  # 關掉自動續訂（商店通知會把 state 改成 cancelled）
+            conn.execute("UPDATE aegistrans_purchases SET state='cancelled' WHERE external_id='apple-trial'")
+        st = self._status().json()
+        self.assertTrue(st["is_trial"])
+        self.assertFalse(st["will_renew"])
+
+    def test_status_paid_month_is_not_trial(self):
+        self._insert_apple_purchase("pro_monthly", self.now + 30 * 86400, external_id="apple-paid")
+        st = self._status().json()
+        self.assertFalse(st["is_trial"])
+        self.assertTrue(st["will_renew"])
+
+    def test_status_had_subscription(self):
+        # 2026-11-06：未訂閱時分新用戶與已到期 —— 過期的商店購買算「訂閱過」，dev 測試列不算
+        self.assertFalse(self._status().json()["had_subscription"])
+        with routes.get_db() as conn:
+            conn.execute(
+                "INSERT INTO aegistrans_purchases (external_id,user_id,store,product_id,tier,state,source,expires_at,created_at,updated_at) "
+                "VALUES ('dev-x',?, 'dev', NULL, 'pro_monthly', 'expired', 'dev', ?, ?, ?)", (self.user_id, self.now - 10, self.now - 100, self.now))
+        self.assertFalse(self._status().json()["had_subscription"])
+        self._insert_apple_purchase("pro_monthly", self.now - 60, external_id="apple-old")  # 已過期
+        st = self._status().json()
+        self.assertFalse(st["is_pro"])
+        self.assertTrue(st["had_subscription"])
+
     # ---- helpers ----
     def _insert_apple_purchase(self, tier, expires_at, external_id="apple-tx-1"):
         with routes.get_db() as conn:

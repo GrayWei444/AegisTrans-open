@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.0.8 — 2026-11-07
 
-- Subscription model for the official server: there is no free tier any more. New users start a 14-day free trial of the monthly or yearly plan through the App Store or Google Play (the store decides eligibility, once per store account); after that, sending files, text and screens through the official server needs a subscription or the lifetime purchase. Files you already received stay available.
+- Fixed: on iOS 27 the app closed immediately after launch (it now adopts the UIScene lifecycle).
+- Subscription model for the official server: there is no free tier any more. New users start a 14-day free trial of the monthly or yearly plan through the App Store or Google Play (the store decides eligibility, once per store account); after that, using the official server needs a subscription or the lifetime purchase. When the trial or subscription ends, the app shows a subscription card that can't be dismissed (with restore purchases, sign out and account deletion).
 - Self-hosted servers are not restricted by subscription (Settings → Server, or a build with `VITE_DEFAULT_API_URL`).
+- No plans screen on sign-in: a card introduces the app and offers the free trial; a reminder and a red dot appear when the trial or a cancelled subscription has 3 days left. The device limit is 10 for every account.
 - The plans screen shows the trial length, what stops when the trial ends and the price after it. Android now picks the free-trial offer explicitly instead of the first offer Google Play returns.
 - Fixed: on a newly added device, downloading a received file could stay at "Receiving 0%" for a minute and then fail when the device had no group key of its own yet. Deleting a message had the same silent failure.
 
